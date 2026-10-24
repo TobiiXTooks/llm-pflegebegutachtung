@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>PflegeBench – Ergebnisdokumentation des Workflows</title>
+<style>
+    :root {
+      --blue:#0b4a9e; --blue-dark:#08356f; --teal:#1eb4b2; --teal-dark:#12908f;
+      --bg:#f5f8fc; --card:#ffffff; --line:#d6e1f0; --text:#183654; --muted:#5d7896;
+      --shadow:0 10px 28px rgba(8,53,111,.08); --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#fbfdff 0%,#f2f7fb 100%);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+    .wrap{max-width:1440px;margin:0 auto;padding:30px 32px 70px}
+    .hero{display:grid;grid-template-columns:100px 1fr;gap:24px;align-items:start;margin-bottom:26px}
+    .logo{width:88px;height:88px;position:relative;margin-top:4px}
+    .logo:before{content:"";position:absolute;inset:0;border:6px solid var(--blue);border-bottom-color:transparent;border-right-color:transparent;border-radius:54px 54px 54px 12px;transform:rotate(-45deg) translate(8px,6px)}
+    .logo:after{content:"";position:absolute;left:18px;bottom:6px;width:66px;height:31px;background:linear-gradient(90deg,var(--teal),#68d2cc);border-radius:32px 32px 4px 32px;transform:rotate(-18deg)}
+    h1{font-size:60px;line-height:1.05;margin:0;color:var(--blue);font-weight:850}
+    .underline{width:105px;height:6px;background:var(--teal);border-radius:999px;margin:14px 0 18px}
+    .subtitle{font-size:24px;line-height:1.38;color:var(--blue-dark);margin:0;max-width:1050px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 24px;margin-bottom:18px}
+    .card h2{font-size:32px;margin:0 0 10px;color:var(--blue)}
+    .card h3{font-size:23px;margin:0 0 12px;color:var(--blue-dark)}
+    .muted{color:var(--muted)}
+    .top-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+    .result-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+    .strip-item{background:#f8fbff;border:1px solid #d7e5f5;border-radius:14px;padding:14px}
+    .strip-item b{display:block;color:var(--blue);font-size:30px;line-height:1;margin-bottom:5px}
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:18px 0}
+    .metric-card{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:22px}
+    .metric-title{font-weight:800;color:var(--blue-dark);font-size:22px}
+    .metric-value{font-size:48px;font-weight:850;color:var(--blue);margin:8px 0 2px}
+    .metric-sub{color:var(--muted);font-size:15px;margin-bottom:12px}
+    .metric-grid-small{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+    .metric-grid-small span{background:#f7fbff;border:1px solid #dbe8f5;border-radius:12px;padding:10px;text-align:center;color:var(--muted)}
+    .metric-grid-small strong{color:var(--blue-dark);font-size:20px}
+    .bar{height:12px;background:#e9f1fa;border-radius:999px;overflow:hidden;margin:8px 0;display:inline-block;width:calc(100% - 92px);vertical-align:middle}
+    .bar span{height:100%;display:block;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:999px}
+    .bar + b{display:inline-block;width:82px;text-align:right;color:var(--blue-dark);font-size:14px}
+    table{width:100%;border-collapse:collapse;border-radius:14px;overflow:hidden;background:#fff}
+    th{background:#ecf5ff;color:var(--blue-dark);text-align:left;font-size:14px;padding:11px;border-bottom:1px solid var(--line)}
+    td{padding:10px 11px;border-bottom:1px solid #edf3f9;font-size:14px;vertical-align:top}
+    tr:hover td{background:#f9fcff}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .module-row{display:grid;grid-template-columns:52px 1fr 60px;align-items:center;gap:10px;margin:12px 0}
+    .module-row span{font-weight:800;color:var(--blue)}
+    .module-row em{font-style:normal;color:var(--muted);font-size:13px;text-align:right}
+    .file-line{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#f7fbff;border:1px solid #d7e5f5;border-radius:12px;padding:10px 12px;margin:8px 0;word-break:break-all}
+    details{border:1px solid var(--line);border-radius:16px;background:#fff;margin:14px 0;box-shadow:var(--shadow);overflow:hidden}
+    summary{cursor:pointer;padding:16px 18px;font-weight:800;color:var(--blue-dark);background:#f5faff}
+    pre{white-space:pre-wrap;margin:0;padding:18px;background:#0b1830;color:#e9f1ff;overflow:auto;font-size:13px;line-height:1.45}
+    .callout{border:2px solid rgba(30,180,178,.5);background:linear-gradient(135deg,#eefbf9,#fff);padding:18px;border-radius:18px}
+    .callout strong{color:var(--teal-dark)}
+    .linkbox a{display:inline-block;margin:7px 10px 7px 0;padding:10px 14px;border-radius:999px;background:#edf7ff;border:1px solid #cce0f6;color:var(--blue);text-decoration:none;font-weight:800}
+    .badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#e9f8f7;color:var(--teal-dark);font-weight:800;font-size:13px}
+    .note{font-size:14px;color:var(--muted)}
+
+    .cmd-section{margin:22px 0 18px}
+    .cmd-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    .cmd-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px}
+    .cmd-card h3{font-size:20px;margin:0 0 8px;color:var(--blue-dark)}
+    .cmd-card .phase{display:inline-block;margin-bottom:10px;padding:5px 9px;border-radius:999px;background:#e9f8f7;color:var(--teal-dark);font-weight:850;font-size:13px}
+    .cmd-card code,.cmd-inline{display:block;background:#0b1830;color:#e9f1ff;border-radius:12px;padding:10px 12px;margin:9px 0;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+    .cmd-card p{margin:8px 0 0;color:var(--muted);line-height:1.45}
+    .cmd-card strong{color:var(--blue-dark)}
+    .cmd-wide{grid-column:span 2}
+    .cmd-result{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f7fbff;border:1px solid #d7e5f5;color:var(--blue-dark);font-size:14px}
+    .section-command{margin:0 0 14px;padding:14px 16px;border-radius:14px;background:#f7fbff;border:1px solid #d7e5f5}
+    .section-command b{color:var(--teal-dark)}
+    .section-command code{background:#0b1830;color:#e9f1ff;border-radius:10px;padding:7px 9px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;display:inline-block;margin-top:6px}
+    @media(max-width:1050px){.cmd-grid{grid-template-columns:1fr}.cmd-wide{grid-column:span 1}}
+    @media(max-width:1050px){.top-grid,.grid2,.grid3,.metrics{grid-template-columns:1fr}.result-strip{grid-template-columns:1fr 1fr}h1{font-size:42px}.hero{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+<section class="hero">
+<div aria-hidden="true" class="logo"></div>
+<div>
+<h1>PflegeBench – Ergebnisdokumentation des Workflows</h1>
+<div class="underline"></div>
+<p class="subtitle">Diese Ausarbeitung dokumentiert die tatsächlich erzeugten Ergebnisse des aktuellen Projektstands. Jedes Ergebnisartefakt ist dem passenden PflegeBench-Befehl zugeordnet, durch den es erzeugt oder geöffnet wird.</p>
+<div class="chip-row" style="margin-top:16px">
+<span class="chip">Abgabebereite Ergebnisübersicht</span>
+<span class="chip">Reale Projektausgaben</span>
+<span class="chip">Befehl-zu-Ergebnis-Zuordnung</span>
+<span class="chip">Stand: aktueller Projektordner</span>
+</div>
+</div>
+</section>
+<section class="top-grid">
+<div class="card">
+<h2>Durchgeführter Ergebnislauf</h2>
+<p>Der vorhandene Benchmark-Datensatz des Projekts wurde gegen die validierten Referenzdateien verglichen. Daraus entstanden konkrete JSON-Reports, Fehler-CSV-Dateien und ein HTML-Dashboard als auswertbare Ergebnisartefakte.</p>
+<div class="result-strip">
+<div class="strip-item"><b>48</b>Modell-Dateien in <code>to_validate</code></div>
+<div class="strip-item"><b>47</b>validierte Referenzdateien</div>
+<div class="strip-item"><b>47</b>generierte Report-JSONs</div>
+<div class="strip-item"><b>47</b>generierte Fehler-CSVs</div>
+</div>
+</div>
+<div class="card callout">
+<h2>Zentrale Einordnung</h2>
+<p><strong>Ergebnisgrundlage:</strong> Die Ausgaben liegen vollständig vorbereitet vor. Dokumentiert sind die verarbeiteten Dateien, die erreichten Genauigkeiten sowie konkrete Abweichungen zwischen Modellantwort und validierter Referenz.</p>
+</div>
+</section>
+<section class="card cmd-section">
+<h2>Befehl-Zuordnung der Ergebnisartefakte</h2>
+<p class="muted">Die folgenden Befehle sind direkt den dokumentierten Ergebnisartefakten zugeordnet. Dadurch ist nachvollziehbar, mit welchem Workflow-Schritt jedes Ergebnis technisch erzeugt oder geöffnet wird.</p>
+<div class="cmd-grid">
+<div class="cmd-card">
+<span class="phase">Projektstart</span>
+<h3>Workflow anzeigen</h3>
+<code>python -m pflegebench overview</code>
+<p><strong>Erzeugt:</strong> textuelle Übersicht der empfohlenen Arbeitsreihenfolge.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: Einstieg in den Ablauf von Datenbasis bis Dashboard.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Setup</span>
+<h3>Projekt installieren</h3>
+<code>python -m pflegebench setup --upgrade-pip</code>
+<p><strong>Erzeugt:</strong> installierte lokale Projektumgebung mit nutzbarem PflegeBench-CLI.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: Befehle wie <code>python -m pflegebench compare-folder</code> sind ausführbar.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Prüfung</span>
+<h3>Umgebung prüfen</h3>
+<code>python -m pflegebench doctor</code>
+<p><strong>Erzeugt:</strong> konkrete Diagnose zu Python, Paketen, Projektpfaden und API-Keys.</p>
+<div class="cmd-result">Sichtbar unten in der HTML: Terminal-Ausgabe <strong>doctor</strong>.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Qualitätssicherung</span>
+<h3>Dateien prüfen</h3>
+<code>python -m pflegebench check</code>
+<p><strong>Erzeugt:</strong> Syntax- und JSON/JSONL-Prüfung des Projektstandes.</p>
+<div class="cmd-result">Konkretes Ergebnis: <strong>95 JSON/JSONL files, errors: 0</strong>.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Datenerzeugung</span>
+<h3>Modellantworten erzeugen</h3>
+<code>python -m pflegebench gui-benchmark</code>
+<p><strong>Erzeugt:</strong> Rohantworten der Modelle für Benchmark-Fälle.</p>
+<div class="cmd-result">Konkretes Ziel im Projekt: Dateien in <strong>data/benchmark/to_validate/</strong>.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Datenerzeugung</span>
+<h3>Getrackte Modellantwort</h3>
+<code>python -m pflegebench trace --model &lt;openrouter-model-id&gt;</code>
+<p><strong>Erzeugt:</strong> nachvollziehbare Modellinteraktion mit Trace-Kontext.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: dokumentierte Antwortgenerierung pro Modell.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">API-Test</span>
+<h3>Modellanbindung testen</h3>
+<code>python -m pflegebench trace-smoke</code>
+<p><strong>Erzeugt:</strong> schnellen Funktionstest, ob OpenRouter/Modellaufruf erreichbar ist.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: vorab prüfen, ob echte Modellgenerierung möglich ist.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Validierung</span>
+<h3>JSON/JSONL bearbeiten</h3>
+<code>python -m pflegebench gui-editor</code>
+<p><strong>Erzeugt:</strong> fachlich korrigierte und bereinigte Benchmark-Dateien.</p>
+<div class="cmd-result">Konkretes Ziel im Projekt: geprüfte Dateien in <strong>data/benchmark/validated/</strong>.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Validierung</span>
+<h3>Browser-Prüftool öffnen</h3>
+<code>python -m pflegebench eval-html</code>
+<p><strong>Erzeugt:</strong> browserbasierte Oberfläche zur fachlichen Kontrolle.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: strukturierte menschliche Bewertung statt reiner Modellausgabe.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Einzelvergleich</span>
+<h3>Ein Modellfile vergleichen</h3>
+<code>python -m pflegebench compare --baseline data/benchmark/validated/&lt;datei_v.json&gt; --model data/benchmark/to_validate/&lt;datei.json&gt; --out reports/&lt;report&gt;.json --errors-csv reports/&lt;errors&gt;.csv --key-mode auto</code>
+<p><strong>Erzeugt:</strong> genau einen JSON-Report und eine Fehler-CSV.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: Detailanalyse eines konkreten Modelllaufs.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Einzelvergleich</span>
+<h3>Älteren Vergleich nutzen</h3>
+<code>python -m pflegebench compare-basic --baseline &lt;validated-file&gt; --model &lt;model-file&gt;</code>
+<p><strong>Erzeugt:</strong> einfache Vergleichsausgabe mit dem älteren Vergleichsskript.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: schneller Basisvergleich ohne vollständiges Dashboard.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Batch-Auswertung</span>
+<h3>Alle passenden Dateien vergleichen</h3>
+<code>python -m pflegebench compare-folder --validated-dir data/benchmark/validated --model-dir data/benchmark/to_validate --out-dir reports --key-mode auto</code>
+<p><strong>Erzeugt:</strong> alle Report-JSONs und Fehler-CSVs für die Abschlussdokumentation.</p>
+<div class="cmd-result">Ergebnis im aktuellen Stand: <strong>47 Vergleiche</strong>, <strong>47 Reports</strong>, <strong>47 Fehler-CSVs</strong>.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Dashboard</span>
+<h3>HTML-Dashboard erzeugen</h3>
+<code>python -m pflegebench dashboard --reports reports --out docs/benchmark_dashboard.html --open</code>
+<p><strong>Erzeugt:</strong> statisches HTML-Dashboard aus den Report-Dateien.</p>
+<div class="cmd-result">Konkretes Ergebnis: <strong>pflegebench_benchmark_dashboard_generiert.html</strong>.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Bereitstellung</span>
+<h3>Dokumentation lokal öffnen</h3>
+<code>python -m pflegebench docs --port 8000</code>
+<p><strong>Erzeugt:</strong> lokalen Webserver für die erzeugten HTML-Dateien.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: Dashboard/Report im Browser präsentieren.</div>
+</div>
+<div class="cmd-card">
+<span class="phase">Reset</span>
+<h3>Generierte Artefakte löschen</h3>
+<code>python -m pflegebench clean</code>
+<p><strong>Erzeugt:</strong> sauberen Ausgangszustand für einen neuen Durchlauf.</p>
+<div class="cmd-result">Erzeugtes Ergebnis: Reports/Dashboard können reproduzierbar neu erzeugt werden.</div>
+</div>
+</div>
+</section>
+<section class="metrics">
+<div class="section-command" style="grid-column:1/-1"><b>Ergebnisaufruf:</b> Die folgenden Modellkennzahlen entstehen aus dem Batch-Vergleich.<br/><code>python -m pflegebench compare-folder --validated-dir data/benchmark/validated --model-dir data/benchmark/to_validate --out-dir reports --key-mode auto</code></div>
+<div class="metric-card">
+<div class="metric-title">ChatGPT 5.5</div>
+<div class="metric-value">99.11%</div>
+<div class="metric-sub">555 von 560 Kriterien korrekt</div>
+<div class="bar"><span style="width:99.1%"></span></div><b></b>
+<div class="metric-grid-small">
+<span><strong>16</strong><br/>Vergleiche</span>
+<span><strong>5</strong><br/>Abweichungen</span>
+<span><strong>560</strong><br/>Common Items</span>
+</div>
+</div>
+<div class="metric-card">
+<div class="metric-title">Claude Sonnet 4.6</div>
+<div class="metric-value">99.82%</div>
+<div class="metric-sub">543 von 544 Kriterien korrekt</div>
+<div class="bar"><span style="width:99.8%"></span></div><b></b>
+<div class="metric-grid-small">
+<span><strong>16</strong><br/>Vergleiche</span>
+<span><strong>1</strong><br/>Abweichungen</span>
+<span><strong>544</strong><br/>Common Items</span>
+</div>
+</div>
+<div class="metric-card">
+<div class="metric-title">Gemini 3</div>
+<div class="metric-value">92.14%</div>
+<div class="metric-sub">469 von 509 Kriterien korrekt</div>
+<div class="bar"><span style="width:92.1%"></span></div><b></b>
+<div class="metric-grid-small">
+<span><strong>15</strong><br/>Vergleiche</span>
+<span><strong>40</strong><br/>Abweichungen</span>
+<span><strong>509</strong><br/>Common Items</span>
+</div>
+</div>
+</section>
+<section class="grid2">
+<div class="card">
+<div class="section-command"><b>Zugehöriger Befehl:</b><br/><code>python -m pflegebench compare-folder</code></div><h3>Datei- und Ergebnisübersicht</h3>
+<table>
+<thead><tr><th>Modell</th><th>Rohdateien</th><th>Validierte Dateien</th><th>Erzeugte Vergleiche</th></tr></thead>
+<tbody>
+<tr><td>ChatGPT 5.5</td><td>16</td><td>16</td><td>16</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>16</td><td>16</td><td>16</td></tr>
+<tr><td>Gemini 3</td><td>16</td><td>15</td><td>15</td></tr></tbody>
+</table>
+<p class="note">Ein Gemini-Durchlauf hatte keine passende validierte Referenz: <code>data/benchmark/to_validate/gemini/15_complete-benchmark_gemini_3_26-06-14.jsonl</code>.</p>
+</div>
+<div class="card">
+<div class="section-command"><b>Zugehöriger Befehl:</b><br/><code>python -m pflegebench compare-folder</code></div><h3>Beste und schwächste Durchläufe je Modell</h3>
+<table>
+<thead><tr><th>Modell</th><th>Bester Durchlauf</th><th>Acc.</th><th>Schwächster Durchlauf</th><th>Acc.</th></tr></thead>
+<tbody>
+<tr><td>ChatGPT 5.5</td><td>11_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>100.00%</td><td>10_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>97.14%</td></tr><tr><td>Claude Sonnet 4.6</td><td>10_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>100.00%</td><td>2_complete-benchmark_claude_sonnet4-6_26-05-15_report.json</td><td>97.06%</td></tr><tr><td>Gemini 3</td><td>10_complete-benchmark_gemini_3_26-06-14_report.json</td><td>100.00%</td><td>8_complete-benchmark_gemini_3_26-06-14_report.json</td><td>79.41%</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="card">
+<div class="section-command"><b>Zugehöriger Befehl:</b><br/><code>python -m pflegebench compare-folder --out-dir reports</code></div><h2>Schwächste konkrete Vergleichsergebnisse</h2>
+<p class="muted">Diese Tabelle ist direkt aus den erzeugten Report-Dateien abgeleitet.</p>
+<table>
+<thead><tr><th>Modell</th><th>Report-Datei</th><th>Common Items</th><th>Accuracy</th><th>Abweichungen</th></tr></thead>
+<tbody>
+<tr><td>Gemini 3</td><td>8_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>79.41%</td><td>7</td></tr>
+<tr><td>Gemini 3</td><td>5_complete-benchmark_gemini_3_26-05-15_report.json</td><td>34</td><td>82.35%</td><td>6</td></tr>
+<tr><td>Gemini 3</td><td>12_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>85.29%</td><td>5</td></tr>
+<tr><td>Gemini 3</td><td>16_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>85.29%</td><td>5</td></tr>
+<tr><td>Gemini 3</td><td>7_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>85.29%</td><td>5</td></tr>
+<tr><td>Gemini 3</td><td>4_complete-benchmark_gemini_3_26-05-15_report.json</td><td>33</td><td>90.91%</td><td>3</td></tr>
+<tr><td>Gemini 3</td><td>13_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>94.12%</td><td>2</td></tr>
+<tr><td>Gemini 3</td><td>9_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>94.12%</td><td>2</td></tr>
+<tr><td>Gemini 3</td><td>11_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>97.06%</td><td>1</td></tr>
+<tr><td>Gemini 3</td><td>14_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>97.06%</td><td>1</td></tr></tbody>
+</table>
+</section>
+<section class="card">
+<div class="section-command"><b>Zugehöriger Befehl:</b><br/><code>python -m pflegebench compare --baseline &lt;validated-file&gt; --model &lt;model-file&gt; --out reports/&lt;report&gt;.json --errors-csv reports/&lt;errors&gt;.csv --key-mode auto</code></div><h2>Konkrete Fehlerbeispiele aus den Reports</h2>
+<p class="muted">Hier werden echte Abweichungen angezeigt: validierte Antwort vs. Modellantwort.</p>
+<table>
+<thead><tr><th>Modell</th><th>Report</th><th>Modul</th><th>Kriterium</th><th>Referenz</th><th>Modell</th></tr></thead>
+<tbody>
+<tr>
+<td>Gemini 3</td>
+<td>8_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M2</td>
+<td>erkennen von risiken und gefahren</td>
+<td>0</td>
+<td>1</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>8_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>ankleiden des oberkörpers</td>
+<td>1</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>8_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>ankleiden des unterkörpers</td>
+<td>1</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>8_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>benutzen einer toilette oder eines toilettenstuhls</td>
+<td>1</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>8_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+<td>0</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>5_complete-benchmark_gemini_3_26-05-15_report.json</td>
+<td>M1</td>
+<td>positionswechsel im bett</td>
+<td>0</td>
+<td>1</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>5_complete-benchmark_gemini_3_26-05-15_report.json</td>
+<td>M2</td>
+<td>zeitliche orientierung</td>
+<td>1</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>5_complete-benchmark_gemini_3_26-05-15_report.json</td>
+<td>M4</td>
+<td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+<td>2</td>
+<td>1</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>5_complete-benchmark_gemini_3_26-05-15_report.json</td>
+<td>M4</td>
+<td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+<td>0</td>
+<td>1</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>5_complete-benchmark_gemini_3_26-05-15_report.json</td>
+<td>M4</td>
+<td>körperpflege im bereich des kopfes</td>
+<td>0</td>
+<td>1</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>12_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>duschen und baden einschließlich der haarpflege</td>
+<td>1</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>12_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>ankleiden des oberkörpers</td>
+<td>1</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>12_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>ankleiden des unterkörpers</td>
+<td>1</td>
+<td>2</td>
+
+</tr>
+<tr>
+<td>Gemini 3</td>
+<td>12_complete-benchmark_gemini_3_26-06-14_report.json</td>
+<td>M4</td>
+<td>mundgerechtes zubereiten der speisen und getränke</td>
+<td>1</td>
+<td>2</td>
+
+</tr></tbody>
+</table>
+</section>
+<section class="card">
+<div class="section-command"><b>Zugehöriger Befehl:</b><br/><code>python -m pflegebench compare-folder --validated-dir data/benchmark/validated --model-dir data/benchmark/to_validate --out-dir reports</code></div><h2>Alle erzeugten Report-Ergebnisse</h2>
+<p class="muted">Vollständige Übersicht über alle 47 erzeugten Vergleiche.</p>
+<table>
+<thead><tr><th>Modell</th><th>Report-Datei</th><th>Common Items</th><th>Korrekt</th><th>Accuracy</th><th>Abweichungen</th></tr></thead>
+<tbody>
+<tr><td>ChatGPT 5.5</td><td>10_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>34/35</td><td>97.14%</td><td>1</td></tr>
+<tr><td>ChatGPT 5.5</td><td>11_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>12_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>13_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>14_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>15_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>34/35</td><td>97.14%</td><td>1</td></tr>
+<tr><td>ChatGPT 5.5</td><td>16_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>1_complete-benchmark_chatgpt_5-5_26-05-15_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>2_complete-benchmark_chatgpt_5-5_26-05-15_report.json</td><td>35</td><td>34/35</td><td>97.14%</td><td>1</td></tr>
+<tr><td>ChatGPT 5.5</td><td>3_complete-benchmark_chatgpt_5-5_26-05-15_report.json</td><td>35</td><td>34/35</td><td>97.14%</td><td>1</td></tr>
+<tr><td>ChatGPT 5.5</td><td>4_complete-benchmark_chatgpt_5-5_26-05-15_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>5_complete-benchmark_chatgpt_5-5_26-05-15_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>6_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>34/35</td><td>97.14%</td><td>1</td></tr>
+<tr><td>ChatGPT 5.5</td><td>7_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>8_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>ChatGPT 5.5</td><td>9_complete-benchmark_chatgpt_5-5_26-06-14_report.json</td><td>35</td><td>35/35</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>10_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>11_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>12_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>13_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>14_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>15_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>16_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>1_complete-benchmark_claude_sonnet4-6_26-05-15_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>2_complete-benchmark_claude_sonnet4-6_26-05-15_report.json</td><td>34</td><td>33/34</td><td>97.06%</td><td>1</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>3_complete-benchmark_claude_sonnet4-6_26-05-15_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>4_complete-benchmark_claude_sonnet4-6_26-05-15_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>5_complete-benchmark_claude_sonnet4-6_26-05-15_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>6_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>7_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>8_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Claude Sonnet 4.6</td><td>9_complete-benchmark_claude_sonnet4-6_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Gemini 3</td><td>10_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Gemini 3</td><td>11_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>33/34</td><td>97.06%</td><td>1</td></tr>
+<tr><td>Gemini 3</td><td>12_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>29/34</td><td>85.29%</td><td>5</td></tr>
+<tr><td>Gemini 3</td><td>13_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>32/34</td><td>94.12%</td><td>2</td></tr>
+<tr><td>Gemini 3</td><td>14_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>33/34</td><td>97.06%</td><td>1</td></tr>
+<tr><td>Gemini 3</td><td>16_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>29/34</td><td>85.29%</td><td>5</td></tr>
+<tr><td>Gemini 3</td><td>1_complete-benchmark_gemini_3_26-05-15_report.json</td><td>34</td><td>33/34</td><td>97.06%</td><td>1</td></tr>
+<tr><td>Gemini 3</td><td>2_complete-benchmark_gemini_3_26-05-15_report.json</td><td>34</td><td>33/34</td><td>97.06%</td><td>1</td></tr>
+<tr><td>Gemini 3</td><td>3_complete-benchmark_gemini_3_26-05-15_report.json</td><td>34</td><td>33/34</td><td>97.06%</td><td>1</td></tr>
+<tr><td>Gemini 3</td><td>4_complete-benchmark_gemini_3_26-05-15_report.json</td><td>33</td><td>30/33</td><td>90.91%</td><td>3</td></tr>
+<tr><td>Gemini 3</td><td>5_complete-benchmark_gemini_3_26-05-15_report.json</td><td>34</td><td>28/34</td><td>82.35%</td><td>6</td></tr>
+<tr><td>Gemini 3</td><td>6_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>34/34</td><td>100.00%</td><td>0</td></tr>
+<tr><td>Gemini 3</td><td>7_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>29/34</td><td>85.29%</td><td>5</td></tr>
+<tr><td>Gemini 3</td><td>8_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>27/34</td><td>79.41%</td><td>7</td></tr>
+<tr><td>Gemini 3</td><td>9_complete-benchmark_gemini_3_26-06-14_report.json</td><td>34</td><td>32/34</td><td>94.12%</td><td>2</td></tr></tbody>
+</table>
+</section>
+<section class="grid2">
+<div class="card">
+<div class="section-command"><b>Zugehörige Befehle:</b><br/><code>python -m pflegebench compare-folder</code><br/><code>python -m pflegebench dashboard --reports reports --out docs/benchmark_dashboard.html --open</code></div><h2>Erzeugte Ergebnisdateien</h2>
+<div class="file-line">reports/*_report.json</div>
+<div class="file-line">reports/*_errors.csv</div>
+<div class="file-line">docs/benchmark_dashboard.html</div>
+<div class="file-line">docs/comparison_models.html</div>
+<p>Das Dashboard wurde mit dem Projekttool erzeugt und liegt als konkrete HTML-Ausgabe vor.</p>
+<div class="linkbox">
+<a href="pflegebench_benchmark_dashboard_generiert.html">Generiertes Dashboard öffnen</a>
+</div>
+</div>
+<div class="card">
+<div class="section-command"><b>Zugehöriger Befehl:</b><br/><code>python -m pflegebench compare --baseline &lt;validated-file&gt; --model &lt;model-file&gt; --out reports/&lt;report&gt;.json --errors-csv reports/&lt;errors&gt;.csv --key-mode auto</code></div><h2>Beispiel aus einem JSON-Report</h2>
+<p class="muted">Ausschnitt aus einem tatsächlich erzeugten Report.</p>
+<pre>{
+  "report_file": "10_complete-benchmark_chatgpt_5-5_26-06-14_report.json",
+  "coverage": {
+    "baseline_items": 35,
+    "model_items": 35,
+    "common_items": 35,
+    "only_in_baseline_count": 0,
+    "only_in_model_count": 0,
+    "only_in_baseline": [],
+    "only_in_model": [],
+    "baseline_duplicate_counts": {},
+    "model_duplicate_counts": {}
+  },
+  "overall": {
+    "criterion_accuracy": 0.971429,
+    "answer_idx_correct": 34,
+    "answer_idx_compared": 35,
+    "raw_point_value_mae": 0.028571,
+    "raw_point_value_compared": 35,
+    "point_scale_id_accuracy": 0.971429,
+    "point_scale_id_correct": 34,
+    "point_scale_id_compared": 35
+  },
+  "first_incorrect_item": [
+    {
+      "id": "10_gpt_004",
+      "module": "M1",
+      "criterion": "fortbewegung innerhalb des wohnbereichs",
+      "baseline_answer_idx": 0,
+      "model_answer_idx": 1,
+      "answer_comparable": true,
+      "answer_correct": false,
+      "baseline_point_value": 0.0,
+      "model_point_value": 1.0,
+      "point_value_abs_error": 1.0,
+      "baseline_point_scale_id": 0,
+      "model_point_scale_id": 1,
+      "point_scale_comparable": true,
+      "point_scale_correct": false,
+      "baseline_line": 120,
+      "model_line": 4
+    }
+  ]
+}</pre>
+</div>
+</section>
+<details open="">
+<summary>Exakte Terminal-Ausgabe: compare-folder — Befehl: python -m pflegebench compare-folder</summary>
+<pre>[1/48] ok           common= 35 acc=  97.14% data/benchmark/to_validate/chatgpt/10_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/10_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[2/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/11_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/11_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[3/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/12_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/12_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[4/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/13_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/13_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[5/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/14_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/14_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[6/48] ok           common= 35 acc=  97.14% data/benchmark/to_validate/chatgpt/15_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/15_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[7/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/16_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/16_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[8/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/1_complete-benchmark_chatgpt_5-5_26-05-15.json -&gt; reports/1_complete-benchmark_chatgpt_5-5_26-05-15_report.json
+[9/48] ok           common= 35 acc=  97.14% data/benchmark/to_validate/chatgpt/2_complete-benchmark_chatgpt_5-5_26-05-15.json -&gt; reports/2_complete-benchmark_chatgpt_5-5_26-05-15_report.json
+[10/48] ok           common= 35 acc=  97.14% data/benchmark/to_validate/chatgpt/3_complete-benchmark_chatgpt_5-5_26-05-15.json -&gt; reports/3_complete-benchmark_chatgpt_5-5_26-05-15_report.json
+[11/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/4_complete-benchmark_chatgpt_5-5_26-05-15.json -&gt; reports/4_complete-benchmark_chatgpt_5-5_26-05-15_report.json
+[12/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/5_complete-benchmark_chatgpt_5-5_26-05-15.json -&gt; reports/5_complete-benchmark_chatgpt_5-5_26-05-15_report.json
+[13/48] ok           common= 35 acc=  97.14% data/benchmark/to_validate/chatgpt/6_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/6_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[14/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/7_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/7_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[15/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/8_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/8_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[16/48] ok           common= 35 acc= 100.00% data/benchmark/to_validate/chatgpt/9_complete-benchmark_chatgpt_5-5_26-06-14.jsonl -&gt; reports/9_complete-benchmark_chatgpt_5-5_26-06-14_report.json
+[17/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/10_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/10_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[18/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/11_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/11_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[19/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/12_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/12_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[20/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/13_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/13_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[21/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/14_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/14_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[22/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/15_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/15_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[23/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/16_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/16_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[24/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/1_complete-benchmark_claude_sonnet4-6_26-05-15.json -&gt; reports/1_complete-benchmark_claude_sonnet4-6_26-05-15_report.json
+[25/48] ok           common= 34 acc=  97.06% data/benchmark/to_validate/claude/2_complete-benchmark_claude_sonnet4-6_26-05-15.json -&gt; reports/2_complete-benchmark_claude_sonnet4-6_26-05-15_report.json
+[26/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/3_complete-benchmark_claude_sonnet4-6_26-05-15.json -&gt; reports/3_complete-benchmark_claude_sonnet4-6_26-05-15_report.json
+[27/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/4_complete-benchmark_claude_sonnet4-6_26-05-15.json -&gt; reports/4_complete-benchmark_claude_sonnet4-6_26-05-15_report.json
+[28/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/5_complete-benchmark_claude_sonnet4-6_26-05-15.json -&gt; reports/5_complete-benchmark_claude_sonnet4-6_26-05-15_report.json
+[29/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/6_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/6_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[30/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/7_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/7_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[31/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/8_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/8_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[32/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/claude/9_complete-benchmark_claude_sonnet4-6_26-06-14.jsonl -&gt; reports/9_complete-benchmark_claude_sonnet4-6_26-06-14_report.json
+[33/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/gemini/10_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/10_complete-benchmark_gemini_3_26-06-14_report.json
+[34/48] ok           common= 34 acc=  97.06% data/benchmark/to_validate/gemini/11_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/11_complete-benchmark_gemini_3_26-06-14_report.json
+[35/48] ok           common= 34 acc=  85.29% data/benchmark/to_validate/gemini/12_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/12_complete-benchmark_gemini_3_26-06-14_report.json
+[36/48] ok           common= 34 acc=  94.12% data/benchmark/to_validate/gemini/13_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/13_complete-benchmark_gemini_3_26-06-14_report.json
+[37/48] ok           common= 34 acc=  97.06% data/benchmark/to_validate/gemini/14_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/14_complete-benchmark_gemini_3_26-06-14_report.json
+[38/48] ok           common= 34 acc=  85.29% data/benchmark/to_validate/gemini/16_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/16_complete-benchmark_gemini_3_26-06-14_report.json
+[39/48] ok           common= 34 acc=  97.06% data/benchmark/to_validate/gemini/1_complete-benchmark_gemini_3_26-05-15.json -&gt; reports/1_complete-benchmark_gemini_3_26-05-15_report.json
+[40/48] ok           common= 34 acc=  97.06% data/benchmark/to_validate/gemini/2_complete-benchmark_gemini_3_26-05-15.json -&gt; reports/2_complete-benchmark_gemini_3_26-05-15_report.json
+[41/48] ok           common= 34 acc=  97.06% data/benchmark/to_validate/gemini/3_complete-benchmark_gemini_3_26-05-15.json -&gt; reports/3_complete-benchmark_gemini_3_26-05-15_report.json
+[42/48] ok           common= 33 acc=  90.91% data/benchmark/to_validate/gemini/4_complete-benchmark_gemini_3_26-05-15.json -&gt; reports/4_complete-benchmark_gemini_3_26-05-15_report.json
+[43/48] ok           common= 34 acc=  82.35% data/benchmark/to_validate/gemini/5_complete-benchmark_gemini_3_26-05-15.json -&gt; reports/5_complete-benchmark_gemini_3_26-05-15_report.json
+[44/48] ok           common= 34 acc= 100.00% data/benchmark/to_validate/gemini/6_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/6_complete-benchmark_gemini_3_26-06-14_report.json
+[45/48] ok           common= 34 acc=  85.29% data/benchmark/to_validate/gemini/7_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/7_complete-benchmark_gemini_3_26-06-14_report.json
+[46/48] ok           common= 34 acc=  79.41% data/benchmark/to_validate/gemini/8_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/8_complete-benchmark_gemini_3_26-06-14_report.json
+[47/48] ok           common= 34 acc=  94.12% data/benchmark/to_validate/gemini/9_complete-benchmark_gemini_3_26-06-14.jsonl -&gt; reports/9_complete-benchmark_gemini_3_26-06-14_report.json
+Matched comparisons: 47
+Files without matching validated baseline:
+  data/benchmark/to_validate/gemini/15_complete-benchmark_gemini_3_26-06-14.jsonl
+</pre>
+</details>
+<details>
+<summary>Exakte Terminal-Ausgabe: check — Befehl: python -m pflegebench check</summary>
+<pre>Checked 95 JSON/JSONL file(s), errors: 0
+EXIT:0
+</pre>
+</details>
+<details>
+<summary>Exakte Terminal-Ausgabe: doctor — Befehl: python -m pflegebench doctor</summary>
+<pre>PflegeBench environment
+  OS              : Windows 11 (Windows-11-10.0.26200-SP0)
+  Python          : 3.13.6
+  Executable      : C:\Program Files\Python313\python.exe
+  Project root    : C:\path\to\llm-pflegebegutachtung
+  Source dir      : C:\path\to\llm-pflegebegutachtung\src
+  Benchmark dir   : C:\path\to\llm-pflegebegutachtung\data\benchmark
+
+Python packages
+  OK      customtkinter
+  OK      dotenv
+  OK      requests
+  OK      duckdb (optional for selected workflows)
+  OK      langfuse (optional for selected workflows)
+  OK      openai (optional for selected workflows)
+
+Important files
+  OK      pyproject.toml
+  OK      .env.example
+  OK      src\benchmark.py
+
+Runtime configuration
+  OK      OPENROUTER_API_KEY (required for model calls, integrated in .env.example)
+  OK      LANGFUSE_PUBLIC_KEY + LANGFUSE_SECRET_KEY (optional for remote tracing)</pre>
+</details>
+
+</main>
+</body>
+</html>

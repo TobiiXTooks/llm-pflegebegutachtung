@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fallvignetten — Validierungstool</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --surface3: #262626;
+    --border: #2e2e2e;
+    --border2: #3a3a3a;
+    --text: #e8e8e8;
+    --text2: #a0a0a0;
+    --text3: #666;
+    --accent: #5b9cf6;
+    --accent-dim: rgba(91,156,246,0.12);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --amber: #fbbf24;
+    --amber-dim: rgba(251,191,36,0.1);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.1);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.1);
+    --mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --radius: 6px;
+    --radius-lg: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    height: 52px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+  .divider-v { width: 1px; height: 20px; background: var(--border); }
+  .queue-info { font-size: 12px; color: var(--text2); }
+  .queue-info span { color: var(--text); font-weight: 500; }
+
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .nav-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .nav-btn:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+  .nav-btn svg { width: 14px; height: 14px; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    height: 2px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width .4s ease;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .panel-divider {
+    background: var(--border);
+    cursor: col-resize;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .panel-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .record-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+
+  /* ── READ PANEL (LEFT) ── */
+  .card-header {
+    margin-bottom: 20px;
+  }
+  .badge-row {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 14px;
+  }
+  .badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+  }
+  .badge-module  { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(167,139,250,0.25); }
+  .badge-scale   { background: var(--accent-dim);  color: var(--accent);  border: 1px solid rgba(91,156,246,0.25); }
+  .badge-diff    { background: var(--amber-dim);   color: var(--amber);   border: 1px solid rgba(251,191,36,0.25); }
+  .badge-lang    { background: var(--surface3);    color: var(--text2);   border: 1px solid var(--border); }
+  .badge-split   { background: var(--surface3);    color: var(--text2);   border: 1px solid var(--border); }
+
+  .stem-text {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.65;
+    color: var(--text);
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .option-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 13px;
+    transition: border-color .15s;
+  }
+  .option-item.selected {
+    border-color: var(--green);
+    background: var(--green-dim);
+  }
+  .option-idx {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 18px;
+  }
+  .option-item.selected .option-idx { color: var(--green); }
+  .option-text { color: var(--text2); }
+  .option-item.selected .option-text { color: var(--text); font-weight: 500; }
+  .checkmark {
+    margin-left: auto;
+    color: var(--green);
+    font-size: 14px;
+    opacity: 0;
+  }
+  .option-item.selected .checkmark { opacity: 1; }
+
+  .rationale-box {
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text3);
+  }
+
+  /* ── EDIT PANEL (RIGHT) ── */
+  .field-group {
+    margin-bottom: 18px;
+  }
+  .field-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .field-label-left { display: flex; align-items: center; gap: 8px; }
+  .field-label .editable-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .field-label .locked-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--border2);
+  }
+
+  .field-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color .15s;
+    resize: none;
+  }
+  .field-input:focus { border-color: var(--accent); background: var(--surface3); }
+  .field-input:disabled {
+    color: var(--text3);
+    cursor: not-allowed;
+    opacity: 0.6;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  textarea.field-input { min-height: 80px; line-height: 1.55; }
+
+  .answer-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .answer-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all .12s;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .answer-option:hover { border-color: var(--border2); color: var(--text); }
+  .answer-option.active {
+    border-color: var(--green);
+    background: var(--green-dim);
+    color: var(--text);
+  }
+  .answer-option .ans-idx {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    min-width: 16px;
+  }
+  .answer-option.active .ans-idx { color: var(--green); }
+
+  .field-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 20px 0;
+  }
+
+  /* ── COMMENT FIELD ── */
+  .comment-wrap {
+    margin-bottom: 18px;
+  }
+
+  /* ── STATUS + ACTIONS ── */
+  .action-bar {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+    padding: 12px 20px;
+  }
+
+  .status-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .status-btn {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    text-align: center;
+  }
+  .status-btn:hover { background: var(--surface3); color: var(--text); }
+  .status-btn.active-validated { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+  .status-btn.active-peer     { background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
+  .status-btn.active-rejected { background: var(--red-dim);   border-color: var(--red);   color: var(--red); }
+
+  .save-row { display: flex; gap: 8px; }
+  .btn-save {
+    flex: 1;
+    padding: 9px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-save:hover { opacity: .85; }
+  .btn-reset-all {
+    padding: 9px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--amber);
+    border-radius: var(--radius);
+    color: var(--amber);
+    font-family: var(--sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-reset-all:hover { background: var(--amber-dim); }
+
+  .export-fmt-btn {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: all .15s;
+  }
+  .export-fmt-btn:hover { background: var(--surface3); border-color: var(--accent); }
+
+  .btn-export {
+    padding: 9px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn-export:hover { background: var(--surface3); color: var(--text); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 18px;
+    font-size: 13px;
+    color: var(--text);
+    opacity: 0;
+    transition: all .25s ease;
+    z-index: 100;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── FILE DROP ── */
+  .drop-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    font-size: 18px;
+    color: var(--accent);
+    font-family: var(--mono);
+    letter-spacing: 0.05em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .drop-overlay.active { opacity: 1; pointer-events: all; }
+
+  /* ── LOAD SCREEN ── */
+  #load-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 300;
+  }
+  .load-logo {
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .load-title {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .load-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+  .drop-zone {
+    width: 380px;
+    border: 1px dashed var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .drop-zone:hover { border-color: var(--accent); background: var(--accent-dim); }
+  .drop-zone-icon { font-size: 28px; margin-bottom: 10px; color: var(--text3); }
+  .drop-zone-text { font-size: 13px; color: var(--text2); line-height: 1.6; }
+  .drop-zone-text strong { color: var(--text); display: block; margin-bottom: 4px; font-size: 14px; }
+  #file-input { display: none; }
+  .load-or {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    margin: 4px 0;
+  }
+  .btn-demo {
+    padding: 9px 22px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text2);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-demo:hover { background: var(--surface3); color: var(--text); }
+
+  .scrollbar-thin { scrollbar-width: thin; scrollbar-color: var(--border2) transparent; }
+
+  .drop-zone {
+    width: 420px;
+    height: 130px;
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: default;
+    transition: all .2s;
+    color: var(--text3);
+    font-size: 13px;
+  }
+  .drop-zone.over {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+  .drop-zone.success {
+    border-color: var(--green);
+    background: var(--green-dim);
+    color: var(--green);
+  }
+  .drop-zone-icon { font-size: 26px; }
+
+  /* ── PASTE AREA ── */
+  .paste-area {
+    width: 420px;
+    height: 140px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 14px;
+    outline: none;
+    resize: none;
+    transition: border-color .2s;
+    line-height: 1.5;
+  }
+  .paste-area:focus { border-color: var(--accent); }
+  .paste-area::placeholder { color: var(--text3); font-family: var(--mono); font-size: 11px; }
+  .btn-load {
+    width: 420px;
+    padding: 10px;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity .15s;
+  }
+  .btn-load:hover { opacity: .85; }
+  .load-error {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--red);
+    width: 420px;
+    text-align: center;
+    min-height: 16px;
+  }
+
+  .reset-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--amber);
+    cursor: pointer;
+    margin-left: auto;
+    padding: 1px 6px;
+    border: 1px solid rgba(251,191,36,0.3);
+    border-radius: 3px;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .reset-btn:hover { background: var(--amber-dim); }
+
+  .changed-indicator {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+    margin-left: 6px;
+    vertical-align: middle;
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .changed-indicator.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- LOAD SCREEN -->
+<div id="load-screen">
+  <div class="load-logo">FALLVIGNETTEN · VALIDIERUNG</div>
+  <div class="load-title">Synth-Daten Validierungstool</div>
+  <div class="load-sub">JSONL/JSON-Datei (M1, M2, M4, M6) ablegen, einfügen oder Demo starten</div>
+
+  <div class="drop-zone" id="drop-zone">
+    <div class="drop-zone-icon" id="drop-icon">↓</div>
+    <div id="drop-label"><strong>JSONL-Datei hier ablegen</strong></div>
+    <div id="drop-sub" style="font-size:11px;color:var(--text3);margin-top:4px;">oder unten einfügen</div>
+  </div>
+
+  <div style="width:420px;display:flex;align-items:center;gap:10px;margin:4px 0;">
+    <div style="flex:1;height:1px;background:var(--border);"></div>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:0.08em;">ODER EINFÜGEN</span>
+    <div style="flex:1;height:1px;background:var(--border);"></div>
+  </div>
+
+  <textarea class="paste-area" id="paste-area"
+    placeholder="JSONL hier einfügen — eine JSON-Zeile pro Datensatz&#10;Schema: M1 / M2 / M4 / M6 mit rationale_options, point_scale_options ...&#10;&#10;{&quot;id&quot;:&quot;M1_012&quot;,&quot;module&quot;:&quot;M1&quot;,&quot;stem&quot;:&quot;...&quot;,&quot;options&quot;:[...],&quot;answer_idx&quot;:2,&quot;rationale_options&quot;:[...],&quot;rationale_id&quot;:18,...}"></textarea>
+  <div class="load-error" id="load-error"></div>
+  <button class="btn-load" onclick="loadFromPaste()">Laden</button>
+  <div class="load-or">— oder —</div>
+  <button class="btn-demo" onclick="loadDemo()">Demo-Daten laden</button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <span class="logo">FALLVIGNETTEN · VALIDIERUNG</span>
+    <div class="divider-v"></div>
+    <span class="queue-info">Datensatz <span id="hdr-idx">1</span> von <span id="hdr-total">—</span></span>
+  </div>
+  <div class="header-right">
+    <button class="nav-btn" onclick="navigate(-1)">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3L5 8l5 5"/></svg>
+      Zurück
+    </button>
+    <button class="nav-btn" onclick="navigate(1)">
+      Weiter
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- PROGRESS -->
+<div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+<!-- MAIN -->
+<main>
+  <!-- LEFT: READ PANEL -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-label">Leseansicht</span>
+      <span class="record-id" id="read-id">—</span>
+    </div>
+    <div class="panel-body" id="read-panel"></div>
+  </div>
+
+  <div class="panel-divider"></div>
+
+  <!-- RIGHT: EDIT PANEL -->
+  <div class="panel" style="display:flex;flex-direction:column;">
+    <div class="panel-header">
+      <span class="panel-label">Editor</span>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px;">
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;"></span>editierbar
+        <span style="width:5px;height:5px;border-radius:50%;background:var(--border2);display:inline-block;margin-left:6px;"></span>gesperrt
+      </span>
+    </div>
+    <div class="panel-body" id="edit-panel" style="flex:1;"></div>
+    <div class="action-bar">
+      <div class="status-row">
+        <button class="status-btn" id="btn-validated" onclick="setStatus('validated')">Validiert</button>
+        <button class="status-btn" id="btn-peer"      onclick="setStatus('peer_review')">Peer Review</button>
+        <button class="status-btn" id="btn-rejected"  onclick="setStatus('rejected')">Abgelehnt</button>
+      </div>
+      <div class="save-row">
+        <button class="btn-save" onclick="saveRecord()">Speichern &amp; weiter →</button>
+        <button class="btn-reset-all" onclick="resetAllFields()" title="Alle Felder auf Original zurücksetzen">↺ Alles zurücksetzen</button>
+        <button class="btn-export" onclick="showExportModal()">Export →</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- EXPORT MODAL (normal flow faux-overlay) -->
+<div id="export-modal-wrap" style="display:none;position:fixed;inset:0;z-index:100;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:24px;width:280px;">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:0.06em;margin-bottom:16px;">Exportformat wählen</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      <button class="export-fmt-btn" onclick="exportAll('json')">
+        <span style="font-weight:500;">JSON</span>
+        <span style="font-size:11px;color:var(--text3);margin-top:2px;">Lesbar, eingerückt · für Menschen</span>
+      </button>
+      <button class="export-fmt-btn" onclick="exportAll('jsonl')">
+        <span style="font-weight:500;">JSONL</span>
+        <span style="font-size:11px;color:var(--text3);margin-top:2px;">Eine Zeile pro Datensatz · für Pipelines</span>
+      </button>
+    </div>
+    <button onclick="hideExportModal()" style="width:100%;padding:7px;background:transparent;border:1px solid var(--border);border-radius:var(--radius);color:var(--text3);font-family:var(--sans);font-size:12px;cursor:pointer;">Abbrechen</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================================================================
+   MODUL-KONFIGURATIONEN
+   Definitionen der Kriterien, Skalen, Optionen, Punkteskalen und
+   rationale_options pro Modul gemäß SCHEMA.md.
+   ================================================================ */
+
+const STANDARD_SELBST_OPTIONS = [
+  "selbständig",
+  "überwiegend selbständig",
+  "überwiegend unselbständig",
+  "unselbständig"
+];
+const STANDARD_SELBST_POINTS = [
+  "selbständig = 0 Punkte",
+  "überwiegend selbständig = 1 Punkt",
+  "überwiegend unselbständig = 2 Punkte",
+  "unselbständig = 3 Punkte"
+];
+const STANDARD_FAEHIG_OPTIONS = [
+  "vorhanden",
+  "größtenteils vorhanden",
+  "in geringem Maße vorhanden",
+  "nicht vorhanden"
+];
+const STANDARD_FAEHIG_POINTS = [
+  "vorhanden = 0 Punkte",
+  "größtenteils vorhanden = 1 Punkt",
+  "in geringem Maße vorhanden = 2 Punkte",
+  "nicht vorhanden = 3 Punkte"
+];
+
+const MODULES = {
+  M1: {
+    label: "M1 — Mobilität",
+    scale_types: ["selbststaendigkeit"],
+    criteria: [
+      "positionswechsel_im_bett",
+      "halten_einer_stabilen_sitzposition",
+      "umsetzen",
+      "fortbewegung_innerhalb_des_wohnbereichs",
+      "treppensteigen"
+    ],
+    default_options: STANDARD_SELBST_OPTIONS,
+    default_point_scale: STANDARD_SELBST_POINTS,
+    rationale_options: [
+      "F4.1.1: mit Hilfsmitteln allein = selbständig",
+      "F4.1.1: nach Anreichen eines Hilfsmittels = überwiegend selbständig",
+      "F4.1.1: nur wenig mithelfen = überwiegend unselbständig",
+      "F4.1.1: nicht beteiligen = unselbständig",
+      "F4.1.2: sicher sitzen ohne Unterstützung = selbständig",
+      "F4.1.2: nur minimale Unterstützung = überwiegend selbständig",
+      "F4.1.2: erhebliche Unterstützung = überwiegend unselbständig",
+      "F4.1.2: nicht selbständig sitzen = unselbständig",
+      "F4.1.3: eigenständig umsetzen = selbständig",
+      "F4.1.3: nach minimaler Hilfe = überwiegend selbständig",
+      "F4.1.3: nur wenig mithelfen = überwiegend unselbständig",
+      "F4.1.3: nicht umsetzen können = unselbständig",
+      "F4.1.4: ohne Hilfe gehen = selbständig",
+      "F4.1.4: nur gelegentliche Unterstützung = überwiegend selbständig",
+      "F4.1.4: ständige Begleitung/erhebliche Hilfe = überwiegend unselbständig",
+      "F4.1.4: nicht gehen können = unselbständig",
+      "F4.1.5: ohne Hilfe Treppen steigen = selbständig",
+      "F4.1.5: mit geringer Unterstützung = überwiegend selbständig",
+      "F4.1.5: erhebliche Hilfe/Stützen = überwiegend unselbständig",
+      "F4.1.5: keine Treppen steigen können = unselbständig"
+    ]
+  },
+
+  M2: {
+    label: "M2 — Kognitive und kommunikative Fähigkeiten",
+    scale_types: ["faehigkeit"],
+    criteria: [
+      "erkennen_von_personen_aus_dem_naeheren_umfeld",
+      "oertliche_orientierung",
+      "zeitliche_orientierung",
+      "erinnern_an_wesentliche_ereignisse_oder_beobachtungen",
+      "steuern_von_mehrschrittigen_alltagshandlungen",
+      "treffen_von_entscheidungen_im_alltag",
+      "verstehen_von_sachverhalten_und_informationen",
+      "erkennen_von_risiken_und_gefahren",
+      "mitteilen_von_elementaren_beduerfnissen",
+      "verstehen_von_aufforderungen",
+      "beteiligen_an_einem_gespraech"
+    ],
+    default_options: STANDARD_FAEHIG_OPTIONS,
+    default_point_scale: STANDARD_FAEHIG_POINTS,
+    rationale_options: [
+      "F4.2.1: erkennt nahe Bezugspersonen unmittelbar = vorhanden",
+      "F4.2.1: erkennt bekannte Personen erst nach längerem Kontakt oder nicht immer zuverlässig = größtenteils vorhanden",
+      "F4.2.1: erkennt Personen aus dem näheren Umfeld nur selten oder stark tagesformabhängig = in geringem Maße vorhanden",
+      "F4.2.1: erkennt auch Familienmitglieder nicht oder nur ausnahmsweise = nicht vorhanden",
+      "F4.2.2: findet sich in Wohnung, Einrichtung und näherer außerhäuslicher Umgebung zurecht = vorhanden",
+      "F4.2.2: Orientierung in eigenen Räumen vorhanden, außerhäuslich erschwert = größtenteils vorhanden",
+      "F4.2.2: Orientierung auch in gewohnter Wohnumgebung unsicher = in geringem Maße vorhanden",
+      "F4.2.2: benötigt selbst in eigener Wohnumgebung regelmäßig Unterstützung = nicht vorhanden",
+      "F4.2.3: zeitliche Orientierung ohne wesentliche Beeinträchtigung = vorhanden",
+      "F4.2.3: meist zeitlich orientiert, aber nicht durchgängig = größtenteils vorhanden",
+      "F4.2.3: zeitliche Orientierung meist nur ansatzweise vorhanden = in geringem Maße vorhanden",
+      "F4.2.3: Verständnis für zeitliche Strukturen kaum oder nicht vorhanden = nicht vorhanden",
+      "F4.2.4: erinnert sich an kurz zurückliegende und wesentliche biografische Ereignisse = vorhanden",
+      "F4.2.4: erinnert sich überwiegend, hat aber einzelne relevante Lücken = größtenteils vorhanden",
+      "F4.2.4: vergisst kurz zurückliegende Ereignisse häufig, wichtige biografische Ereignisse teils vorhanden = in geringem Maße vorhanden",
+      "F4.2.4: Erinnerung an Ereignisse, Dinge oder Personen der eigenen Lebensgeschichte kaum vorhanden = nicht vorhanden",
+      "F4.2.5: kann mehrschrittige Alltagshandlungen in richtiger Reihenfolge steuern = vorhanden",
+      "F4.2.5: verliert manchmal den Faden, kann mit Erinnerung fortsetzen = größtenteils vorhanden",
+      "F4.2.5: verwechselt oder vergisst regelmäßig notwendige Handlungsschritte = in geringem Maße vorhanden",
+      "F4.2.5: beginnt mehrschrittige Alltagshandlungen kaum oder bricht sie ab = nicht vorhanden",
+      "F4.2.6: trifft im Alltag folgerichtige und geeignete Entscheidungen = vorhanden",
+      "F4.2.6: trifft einfache Alltagsentscheidungen meist selbst, benötigt bei komplexeren Situationen Unterstützung = größtenteils vorhanden",
+      "F4.2.6: Entscheidungen sind häufig ungeeignet oder nur mit erheblicher Unterstützung möglich = in geringem Maße vorhanden",
+      "F4.2.6: kann Entscheidungen kaum treffen oder Zustimmung/Ablehnung kaum ausdrücken = nicht vorhanden",
+      "F4.2.7: versteht Sachverhalte und Informationen des Alltags = vorhanden",
+      "F4.2.7: versteht einfache Informationen, komplexere Inhalte nur eingeschränkt = größtenteils vorhanden",
+      "F4.2.7: versteht nur sehr einfache oder stark reduzierte Informationen = in geringem Maße vorhanden",
+      "F4.2.7: versteht Sachverhalte und Informationen kaum oder nicht = nicht vorhanden",
+      "F4.2.8: erkennt Risiken und Gefahren im Alltag angemessen = vorhanden",
+      "F4.2.8: erkennt naheliegende Risiken meist, unbekannte oder komplexe Risiken eingeschränkt = größtenteils vorhanden",
+      "F4.2.8: erkennt Risiken nur in einfachen oder unmittelbar erfahrbaren Situationen = in geringem Maße vorhanden",
+      "F4.2.8: erkennt Risiken und Gefahren kaum oder nicht = nicht vorhanden",
+      "F4.2.9: kann elementare Bedürfnisse eindeutig verbal oder nonverbal mitteilen = vorhanden",
+      "F4.2.9: teilt Bedürfnisse nicht immer spontan oder eindeutig mit, kann sie auf Nachfrage verdeutlichen = größtenteils vorhanden",
+      "F4.2.9: Bedürfnisse sind nur aus uneindeutigem Verhalten ableitbar = in geringem Maße vorhanden",
+      "F4.2.9: äußert Bedürfnisse kaum oder nicht, Zustimmung/Ablehnung nicht erkennbar = nicht vorhanden",
+      "F4.2.10: versteht Aufforderungen zu alltäglichen Grundbedürfnissen = vorhanden",
+      "F4.2.10: versteht einfache Aufforderungen, komplexere müssen erklärt werden = größtenteils vorhanden",
+      "F4.2.10: versteht Aufforderungen meist nur nach Wiederholung oder Erläuterung = in geringem Maße vorhanden",
+      "F4.2.10: versteht Anleitungen und Aufforderungen kaum oder nicht = nicht vorhanden",
+      "F4.2.11: kann Gesprächsinhalte aufnehmen, passend antworten und Gespräch fortführen = vorhanden",
+      "F4.2.11: beteiligt sich an einfachen Gesprächen, bei komplexen Gesprächen eingeschränkt = größtenteils vorhanden",
+      "F4.2.11: beteiligt sich nur geringfügig, stark verlangsamt oder überwiegend nonverbal = in geringem Maße vorhanden",
+      "F4.2.11: Gesprächsbeteiligung kaum oder nicht möglich = nicht vorhanden"
+    ]
+  },
+
+  M4: {
+    label: "M4 — Selbstversorgung",
+    scale_types: ["selbststaendigkeit", "sonden_oder_parenterale_ernaehrung"],
+    criteria: [
+      "waschen_des_vorderen_oberkoerpers",
+      "koerperpflege_im_bereich_des_kopfes",
+      "waschen_des_intimbereichs",
+      "duschen_und_baden_einschliesslich_waschen_der_haare",
+      "an_und_auskleiden_des_oberkoerpers",
+      "an_und_auskleiden_des_unterkoerpers",
+      "mundgerechtes_zubereiten_der_nahrung_und_eingiessen_von_getraenken",
+      "essen",
+      "trinken",
+      "benutzen_einer_toilette_oder_eines_toilettenstuhls",
+      "bewaeltigen_der_folgen_einer_harninkontinenz_und_umgang_mit_dauerkatheter_und_urostoma",
+      "bewaeltigen_der_folgen_einer_stuhlinkontinenz_und_umgang_mit_stoma",
+      "ernaehrung_parenteral_oder_ueber_sonde"
+    ],
+    default_options: STANDARD_SELBST_OPTIONS,
+    default_point_scale: [
+      "F4.4.1-F4.4.7, F4.4.11-F4.4.12 + selbständig = 0 Punkte",
+      "F4.4.1-F4.4.7, F4.4.11-F4.4.12 + überwiegend selbständig = 1 Punkt",
+      "F4.4.1-F4.4.7, F4.4.11-F4.4.12 + überwiegend unselbständig = 2 Punkte",
+      "F4.4.1-F4.4.7, F4.4.11-F4.4.12 + unselbständig = 3 Punkte",
+      "F4.4.8 Essen + selbständig = 0 Punkte",
+      "F4.4.8 Essen + überwiegend selbständig = 3 Punkte",
+      "F4.4.8 Essen + überwiegend unselbständig = 6 Punkte",
+      "F4.4.8 Essen + unselbständig = 9 Punkte",
+      "F4.4.9 Trinken oder F4.4.10 Benutzen einer Toilette/eines Toilettenstuhls + selbständig = 0 Punkte",
+      "F4.4.9 Trinken oder F4.4.10 Benutzen einer Toilette/eines Toilettenstuhls + überwiegend selbständig = 2 Punkte",
+      "F4.4.9 Trinken oder F4.4.10 Benutzen einer Toilette/eines Toilettenstuhls + überwiegend unselbständig = 4 Punkte",
+      "F4.4.9 Trinken oder F4.4.10 Benutzen einer Toilette/eines Toilettenstuhls + unselbständig = 6 Punkte"
+    ],
+    // Spezialkonfiguration für F4.4.13 (Sondennahrung / parenterale Ernährung)
+    special_criteria: {
+      ernaehrung_parenteral_oder_ueber_sonde: {
+        scale_type: "sonden_oder_parenterale_ernaehrung",
+        options: [
+          "selbständig oder keine/nicht tägliche/nicht dauerhafte künstliche Ernährung",
+          "mit Hilfe: täglich zusätzlich zu oraler Ernährung",
+          "mit Hilfe: ausschließlich oder nahezu ausschließlich"
+        ],
+        point_scale_options: [
+          "selbständig oder keine, nicht tägliche oder nicht dauerhafte künstliche Ernährung = 0 Punkte",
+          "mit Hilfe: täglich zusätzlich zu oraler Ernährung = 6 Punkte",
+          "mit Hilfe: ausschließlich oder nahezu ausschließlich künstliche Ernährung = 3 Punkte"
+        ],
+        rationale_options: [
+          "F4.4.13: keine, nicht tägliche, nicht dauerhafte oder selbständig durchgeführte künstliche Ernährung",
+          "F4.4.13: mit Hilfe täglich zusätzlich zu oraler Ernährung",
+          "F4.4.13: mit Hilfe ausschließlich oder nahezu ausschließlich künstliche Ernährung"
+        ]
+      }
+    },
+    rationale_options: [
+      "F4.4.1: wäscht vorderen Oberkörper ohne personelle Hilfe = selbständig",
+      "F4.4.1: benötigt Bereitstellen, Aufforderung oder punktuelle Teilhilfe = überwiegend selbständig",
+      "F4.4.1: kann nur geringe Anteile übernehmen oder braucht umfassende Anleitung = überwiegend unselbständig",
+      "F4.4.1: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.2: führt Kopfpflege ohne personelle Hilfe durch = selbständig",
+      "F4.4.2: benötigt Bereitlegen/Richten von Gegenständen oder punktuelle Nachhilfe = überwiegend selbständig",
+      "F4.4.2: beginnt Teilhandlungen, führt sie aber nicht ausreichend zu Ende = überwiegend unselbständig",
+      "F4.4.2: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.3: wäscht und trocknet Intimbereich ohne personelle Hilfe = selbständig",
+      "F4.4.3: benötigt Utensilien, Aufforderung oder punktuelle Teilhilfe = überwiegend selbständig",
+      "F4.4.3: kann nur geringe Anteile übernehmen = überwiegend unselbständig",
+      "F4.4.3: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.4: duscht/badet einschließlich Haare ohne personelle Hilfe = selbständig",
+      "F4.4.4: benötigt Vorbereitung, einzelne Handreichungen oder Sicherheitsanwesenheit = überwiegend selbständig",
+      "F4.4.4: kann nur geringe Anteile wie Waschen des vorderen Oberkörpers übernehmen = überwiegend unselbständig",
+      "F4.4.4: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.5: kleidet Oberkörper ohne personelle Hilfe an/aus = selbständig",
+      "F4.4.5: benötigt Anreichen/Halten der Kleidung, Hilfe bei Verschlüssen oder Sitzkontrolle = überwiegend selbständig",
+      "F4.4.5: kann nur kleine Teilhandlungen übernehmen = überwiegend unselbständig",
+      "F4.4.5: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.6: kleidet Unterkörper ohne personelle Hilfe an/aus = selbständig",
+      "F4.4.6: benötigt Anreichen/Halten, Einstiegshilfe, Hilfe bei Verschlüssen oder Sitzkontrolle = überwiegend selbständig",
+      "F4.4.6: kann nur geringe Teilhandlungen übernehmen = überwiegend unselbständig",
+      "F4.4.6: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.7: zerteilt Nahrung und gießt Getränke ohne personelle Hilfe ein = selbständig",
+      "F4.4.7: benötigt Vorbereitung, Bereitstellung oder punktuelle Hilfe = überwiegend selbständig",
+      "F4.4.7: Nahrung/Getränke müssen überwiegend mundgerecht vorbereitet werden = überwiegend unselbständig",
+      "F4.4.7: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.8: isst ohne personelle Hilfe = selbständig",
+      "F4.4.8: benötigt punktuelle Anleitung oder einzelne Hilfen beim Essen = überwiegend selbständig",
+      "F4.4.8: muss aufwendig motiviert werden oder Nahrung wird größtenteils gereicht = überwiegend unselbständig",
+      "F4.4.8: Nahrung muss nahezu komplett gereicht werden oder Schlucken ist nicht möglich = unselbständig",
+      "F4.4.9: trinkt ohne personelle Hilfe = selbständig",
+      "F4.4.9: benötigt Positionieren des Trinkgefäßes oder Erinnerung = überwiegend selbständig",
+      "F4.4.9: Trinkgefäß muss gegeben werden oder zu fast jedem Schluck motiviert werden = überwiegend unselbständig",
+      "F4.4.9: Getränke müssen nahezu komplett gereicht werden oder Schlucken ist nicht möglich = unselbständig",
+      "F4.4.10: nutzt Toilette/Toilettenstuhl ohne personelle Hilfe = selbständig",
+      "F4.4.10: erledigt größten Anteil selbst, benötigt nur einzelne Hilfen = überwiegend selbständig",
+      "F4.4.10: erledigt nur geringe Anteile selbst = überwiegend unselbständig",
+      "F4.4.10: beteiligt sich nicht oder nur minimal = unselbständig",
+      "F4.4.11: nutzt Hilfsmittel bei Harninkontinenz/Katheter/Urostoma selbständig = selbständig",
+      "F4.4.11: benötigt Anreichen, Entsorgung oder Erinnerung = überwiegend selbständig",
+      "F4.4.11: beteiligt sich nur teilweise am Wechsel der Systeme = überwiegend unselbständig",
+      "F4.4.11: Beteiligung nicht oder nur minimal möglich = unselbständig",
+      "F4.4.12: nutzt Inkontinenz- oder Stomasysteme selbständig = selbständig",
+      "F4.4.12: benötigt Bereitlegen, Entsorgung oder Erinnerung = überwiegend selbständig",
+      "F4.4.12: beteiligt sich nur teilweise am Wechsel der Systeme = überwiegend unselbständig",
+      "F4.4.12: Beteiligung nicht oder nur minimal möglich = unselbständig"
+    ]
+  },
+
+  M6: {
+    label: "M6 — Gestaltung des Alltagslebens und sozialer Kontakte",
+    scale_types: ["selbststaendigkeit"],
+    criteria: [
+      "gestaltung_des_tagesablaufs_und_anpassung_an_veraenderungen",
+      "ruhen_und_schlafen",
+      "sichbeschaeftigen",
+      "vornehmen_von_in_die_zukunft_gerichteten_planungen",
+      "interaktion_mit_personen_im_direkten_kontakt",
+      "kontaktpflege_zu_personen_ausserhalb_des_direkten_umfelds"
+    ],
+    default_options: STANDARD_SELBST_OPTIONS,
+    default_point_scale: STANDARD_SELBST_POINTS,
+    rationale_options: [
+      "F4.6.1: Tagesablauf kann ohne personelle Hilfe geplant und angepasst werden = selbständig",
+      "F4.6.1: Routineabläufe gelingen, bei ungewohnten Veränderungen ist Unterstützung nötig = überwiegend selbständig",
+      "F4.6.1: Hilfe bei Planung des Routinetagesablaufs oder häufige Erinnerung über den Tag nötig = überwiegend unselbständig",
+      "F4.6.1: Mitwirkung an Tagesstrukturierung kaum oder nicht möglich = unselbständig",
+      "F4.6.2: Tag-Nacht-Rhythmus und Ruhephasen ohne personelle Hilfe möglich = selbständig",
+      "F4.6.2: Hilfe beim Aufstehen/Zubettgehen oder gelegentlicher nächtlicher Hilfebedarf = überwiegend selbständig",
+      "F4.6.2: nahezu jede Nacht erhebliche Hilfe bei Unruhe, Einschlafen, Lagewechsel oder Toilettengang nötig = überwiegend unselbständig",
+      "F4.6.2: kein oder deutlich gestörter Schlaf-Wach-Rhythmus = unselbständig",
+      "F4.6.3: Beschäftigung kann ohne personelle Hilfe gewählt und durchgeführt werden = selbständig",
+      "F4.6.3: geringe Hilfe wie Vorbereitung, Zurechtlegen, Erinnerung oder Motivation nötig = überwiegend selbständig",
+      "F4.6.3: Beschäftigung nur mit umfassender Anleitung, Begleitung oder motorischer Unterstützung möglich = überwiegend unselbständig",
+      "F4.6.3: keine nennenswerte Mitwirkung an Entscheidung oder Durchführung = unselbständig",
+      "F4.6.4: Zukunftsplanung über den Tag hinaus ohne personelle Hilfe möglich = selbständig",
+      "F4.6.4: plant etwas, muss aber an Umsetzung erinnert werden oder braucht Abstimmungshilfe = überwiegend selbständig",
+      "F4.6.4: plant kaum selbst, entscheidet aber mit Unterstützung oder braucht umfassende Umsetzungshilfe = überwiegend unselbständig",
+      "F4.6.4: keine Zeitvorstellung für Planungen oder keine erkennbare Zustimmung/Ablehnung = unselbständig",
+      "F4.6.5: direkte Interaktion mit anderen Personen ohne personelle Hilfe möglich = selbständig",
+      "F4.6.5: Interaktion mit vertrauten Personen gelingt, bei fremden Personen oder Kommunikationsproblemen punktuelle Hilfe nötig = überwiegend selbständig",
+      "F4.6.5: kaum Eigeninitiative, reagiert aber auf Ansprache oder braucht umfassende Kommunikationsunterstützung = überwiegend unselbständig",
+      "F4.6.5: reagiert nicht oder kaum auf Ansprache oder nonverbale Kontaktversuche = unselbständig",
+      "F4.6.6: Kontakte außerhalb des direkten Umfelds ohne personelle Hilfe pflegen = selbständig",
+      "F4.6.6: kann Kontakt planen, benötigt aber Hilfe bei Umsetzung, Erinnerung oder Technik = überwiegend selbständig",
+      "F4.6.6: Kontaktgestaltung ist überwiegend reaktiv, Mitwirkung nur bei Initiative anderer = überwiegend unselbständig",
+      "F4.6.6: Kontaktpflege außerhalb des direkten Umfelds kaum oder nicht möglich = unselbständig"
+    ]
+  }
+};
+
+/* Hilfsfunktion: Konfiguration für ein Record bestimmen
+   (berücksichtigt Spezial-Kriterien wie M4.4.13) */
+function getModuleConfig(rec) {
+  const mod = MODULES[rec.module];
+  if (!mod) return null;
+  const crit = Array.isArray(rec.criterion) ? rec.criterion[0] : rec.criterion;
+  if (mod.special_criteria && mod.special_criteria[crit]) {
+    const special = mod.special_criteria[crit];
+    return {
+      ...mod,
+      default_options: special.options,
+      default_point_scale: special.point_scale_options,
+      rationale_options: special.rationale_options,
+      _special: true,
+      _special_scale_type: special.scale_type
+    };
+  }
+  return mod;
+}
+
+/* ================================================================
+   DEMO-DATEN (Schema-konform für M1, M2, M4, M6)
+   ================================================================ */
+const DEMO_DATA = [
+  {
+    id: "M1_012", module: "M1",
+    criterion: MODULES.M1.criteria,
+    scale_type: "selbststaendigkeit",
+    stem: "Die versicherte Person schafft wenige Stufen allein, über eine Etage muss sie gestützt werden.",
+    options: STANDARD_SELBST_OPTIONS,
+    answer_idx: 2,
+    rationale_options: MODULES.M1.rationale_options,
+    rationale_id: 18,
+    point_scale_options: STANDARD_SELBST_POINTS,
+    point_scale_id: 2,
+    point_value: 2,
+    split: "test",
+    model: "ChatGPT", model_version: "5.4", temperature: null
+  },
+  {
+    id: "M2_004", module: "M2",
+    criterion: MODULES.M2.criteria,
+    scale_type: "faehigkeit",
+    stem: "Die versicherte Person erkennt ihre Tochter erst nach längerer Ansprache, kann sie dann aber korrekt zuordnen.",
+    options: STANDARD_FAEHIG_OPTIONS,
+    answer_idx: 1,
+    rationale_options: MODULES.M2.rationale_options,
+    rationale_id: 1,
+    point_scale_options: STANDARD_FAEHIG_POINTS,
+    point_scale_id: 1,
+    point_value: 1,
+    split: "test",
+    model: "ChatGPT", model_version: "5.4", temperature: null
+  },
+  {
+    id: "M4_008", module: "M4",
+    criterion: MODULES.M4.criteria,
+    scale_type: "selbststaendigkeit",
+    stem: "Die versicherte Person kann essen, benötigt aber bei fast jeder Mahlzeit Motivation und teilweise das Reichen der Nahrung.",
+    options: STANDARD_SELBST_OPTIONS,
+    answer_idx: 2,
+    rationale_options: MODULES.M4.rationale_options,
+    rationale_id: 30,
+    point_scale_options: MODULES.M4.default_point_scale,
+    point_scale_id: 6,
+    point_value: 6,
+    split: "test",
+    model: "ChatGPT", model_version: "5.4", temperature: null
+  },
+  {
+    id: "M4_013", module: "M4",
+    criterion: "ernaehrung_parenteral_oder_ueber_sonde",
+    scale_type: "sonden_oder_parenterale_ernaehrung",
+    stem: "Die versicherte Person erhält täglich zusätzlich zur oralen Nahrung Sondennahrung und benötigt dabei Hilfe.",
+    options: MODULES.M4.special_criteria.ernaehrung_parenteral_oder_ueber_sonde.options,
+    answer_idx: 1,
+    rationale_options: MODULES.M4.special_criteria.ernaehrung_parenteral_oder_ueber_sonde.rationale_options,
+    rationale_id: 1,
+    point_scale_options: MODULES.M4.special_criteria.ernaehrung_parenteral_oder_ueber_sonde.point_scale_options,
+    point_scale_id: 1,
+    point_value: 6,
+    split: "test",
+    model: "ChatGPT", model_version: "5.4", temperature: null
+  },
+  {
+    id: "M6_002", module: "M6",
+    criterion: MODULES.M6.criteria,
+    scale_type: "selbststaendigkeit",
+    stem: "Die versicherte Person kann ihren gewohnten Tagesablauf weitgehend selbst planen, benötigt aber bei ungewohnten Änderungen Erinnerung und Unterstützung.",
+    options: STANDARD_SELBST_OPTIONS,
+    answer_idx: 1,
+    rationale_options: MODULES.M6.rationale_options,
+    rationale_id: 1,
+    point_scale_options: STANDARD_SELBST_POINTS,
+    point_scale_id: 1,
+    point_value: 1,
+    split: "test",
+    model: "ChatGPT", model_version: "5.4", temperature: null
+  }
+];
+
+let records = [];
+let currentIdx = 0;
+let edits = {};
+let statuses = {};
+let comments = {};
+let changedFields = {};
+let inputFilename = '';
+
+function loadDemo() {
+  records = DEMO_DATA.map(r => JSON.parse(JSON.stringify(r)));
+  edits = {}; statuses = {}; comments = {}; changedFields = {};
+  inputFilename = 'demo';
+  document.getElementById('load-screen').style.display = 'none';
+  renderRecord(0);
+}
+
+function loadFromPaste() {
+  const text = document.getElementById('paste-area').value.trim();
+  const errEl = document.getElementById('load-error');
+  if (!text) { errEl.textContent = 'Bitte JSONL-Text einfügen.'; return; }
+  // filename from paste: not available, use fallback
+  if (!inputFilename) inputFilename = 'export';
+  processText(text);
+}
+
+function processText(text) {
+  const errEl = document.getElementById('load-error');
+  const parsed = [];
+  const errMsgs = [];
+  const chunks = splitIntoChunks(text);
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i].trim();
+    if (!chunk) continue;
+    try {
+      parsed.push(JSON.parse(chunk));
+    } catch(e) {
+      errMsgs.push('Datensatz ' + (i+1) + ': ' + e.message);
+    }
+  }
+
+  if (errMsgs.length && !parsed.length) {
+    errEl.textContent = errMsgs[0];
+    return;
+  }
+  if (errMsgs.length) {
+    errEl.textContent = errMsgs.length + ' Datensatz/Datensätze übersprungen (Fehler).';
+  } else {
+    errEl.textContent = '';
+  }
+
+  if (!parsed.length) { errEl.textContent = 'Keine gültigen JSON-Objekte gefunden.'; return; }
+  records = parsed;
+  edits = {}; statuses = {}; comments = {}; changedFields = {};
+  document.getElementById('load-screen').style.display = 'none';
+  renderRecord(0);
+}
+
+function splitIntoChunks(text) {
+  // Try single-line JSONL first (each line is a complete object)
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  const allSingleLine = lines.every(l => l.startsWith('{') && l.endsWith('}'));
+  if (allSingleLine) return lines;
+
+  // Otherwise: re-assemble pretty-printed objects by tracking brace depth
+  const chunks = [];
+  let depth = 0, start = -1;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '{') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (ch === '}') {
+      depth--;
+      if (depth === 0 && start !== -1) {
+        chunks.push(text.slice(start, i + 1));
+        start = -1;
+      }
+    }
+  }
+  return chunks;
+}
+
+// Also allow Enter key shortcut on paste area (Ctrl+Enter to load)
+document.addEventListener('DOMContentLoaded', () => {
+  const pa = document.getElementById('paste-area');
+  if (pa) {
+    pa.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') loadFromPaste();
+    });
+  }
+
+  // ── Drag & drop on load screen ──
+  const zone = document.getElementById('drop-zone');
+  const dropLabel = document.getElementById('drop-label');
+  const dropSub   = document.getElementById('drop-sub');
+  const dropIcon  = document.getElementById('drop-icon');
+
+  function setOver(on) {
+    zone.classList.toggle('over', on);
+    dropLabel.innerHTML = on ? '<strong>Loslassen zum Laden</strong>' : '<strong>JSONL-Datei hier ablegen</strong>';
+    dropSub.style.opacity = on ? '0' : '1';
+  }
+
+  // Prevent browser from opening file on drag anywhere
+  document.addEventListener('dragover',  e => e.preventDefault());
+  document.addEventListener('drop',      e => e.preventDefault());
+
+  zone.addEventListener('dragenter', e => { e.preventDefault(); setOver(true); });
+  zone.addEventListener('dragover',  e => { e.preventDefault(); });
+  zone.addEventListener('dragleave', e => { e.preventDefault(); setOver(false); });
+
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    setOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) {
+      document.getElementById('load-error').textContent = 'Datei konnte nicht gelesen werden.';
+      return;
+    }
+    inputFilename = file.name;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      zone.classList.add('success');
+      dropIcon.textContent = '✓';
+      dropLabel.innerHTML = `<strong>${escHtml(file.name)}</strong>`;
+      dropSub.textContent = (file.size / 1024).toFixed(1) + ' KB';
+      processText(ev.target.result);
+    };
+    reader.onerror = () => {
+      document.getElementById('load-error').textContent = 'Datei konnte nicht gelesen werden.';
+    };
+    reader.readAsText(file);
+  });
+});
+
+function renderRecord(idx) {
+  currentIdx = idx;
+  const total = records.length;
+  const original = records[idx];
+  const working  = getCurrentRecord();
+
+  document.getElementById('hdr-idx').textContent = idx + 1;
+  document.getElementById('hdr-total').textContent = total;
+  document.getElementById('progress-fill').style.width = ((idx + 1) / total * 100) + '%';
+  document.getElementById('read-id').textContent = original.id;
+
+  renderReadPanel(original, working);
+  renderEditPanel(working);
+  updateStatusButtons(statuses[original.id] || null);
+}
+
+function getCurrentRecord() {
+  const base = records[currentIdx];
+  const id = base.id;
+  return Object.assign({}, base, edits[id] || {});
+}
+
+function renderReadPanel(rec, working) {
+  working = working || rec;
+  const cf = changedFields[rec.id] || {};
+  const modCfg = getModuleConfig(rec);
+  const modLabel = modCfg ? modCfg.label : ('Modul ' + rec.module);
+
+  function maybeStrike(field, val) {
+    if (!cf[field]) return escHtml(String(val));
+    return `<span style="text-decoration:line-through;opacity:0.45;">${escHtml(String(val))}</span> <span style="color:var(--amber);font-size:11px;font-family:var(--mono);">geändert</span>`;
+  }
+
+  const answerChanged = cf.answer_idx;
+  const rationaleChanged = cf.rationale_id;
+  const pointScaleChanged = cf.point_scale_id;
+
+  // Kriterium (kann String oder Array sein)
+  const critDisplay = Array.isArray(rec.criterion) ? rec.criterion.join(', ') : rec.criterion;
+
+  // Aktuelle Rationale aus rationale_options[rationale_id]
+  const rationaleText = (rec.rationale_options && rec.rationale_options[rec.rationale_id] !== undefined)
+    ? rec.rationale_options[rec.rationale_id]
+    : '—';
+  const workingRationaleText = (working.rationale_options && working.rationale_options[working.rationale_id] !== undefined)
+    ? working.rationale_options[working.rationale_id]
+    : '—';
+
+  // Aktuelle Punkteskala
+  const pointScaleText = (rec.point_scale_options && rec.point_scale_options[rec.point_scale_id] !== undefined)
+    ? rec.point_scale_options[rec.point_scale_id]
+    : '—';
+
+  // Frequenz (nur M5, aber generisch handhaben)
+  const hasFrequency = rec.frequency_count !== undefined || rec.frequency_unit !== undefined;
+
+  const html = `
+    <div class="card-header">
+      <div class="badge-row">
+        <span class="badge badge-module">${escHtml(modLabel)}</span>
+        <span class="badge badge-scale">${escHtml(rec.scale_type || '—')}</span>
+        <span class="badge badge-split">${escHtml(rec.split || '—')}</span>
+        ${rec.point_value !== undefined ? `<span class="badge badge-diff" style="background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.25);">${rec.point_value} Punkt${rec.point_value === 1 ? '' : 'e'}</span>` : ''}
+      </div>
+    </div>
+
+    <div class="section-label" style="margin-bottom:8px;">Metadaten <span style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:0.04em;">— Original</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:20px;">
+      ${metaRow('ID', rec.id, false)}
+      ${metaRow('Modul', rec.module, false)}
+      ${metaRow('Kriterium', critDisplay, cf.criterion)}
+      ${metaRow('Scale type', rec.scale_type, cf.scale_type)}
+      ${metaRow('Modell', (rec.model || '—') + (rec.model_version ? ' v' + rec.model_version : ''), false)}
+      ${metaRow('Temperatur', rec.temperature !== null && rec.temperature !== undefined ? rec.temperature : '—', false)}
+    </div>
+
+    <div class="section-label">Fallbeschreibung <span style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:0.04em;">— Original</span></div>
+    <div class="stem-text" style="${cf.stem ? 'border-left-color:var(--amber);opacity:0.7;' : ''}">${cf.stem ? maybeStrike('stem', rec.stem) : escHtml(rec.stem)}</div>
+
+    <div class="section-label">Antwortoptionen <span style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:0.04em;">— Original</span></div>
+    <div class="options-list">
+      ${(rec.options || []).map((o, i) => `
+        <div class="option-item ${i === rec.answer_idx ? 'selected' : ''}" style="${answerChanged && i === rec.answer_idx ? 'opacity:0.5;border-color:var(--amber);' : ''}">
+          <span class="option-idx">${i}</span>
+          <span class="option-text">${escHtml(o)}</span>
+          <span class="checkmark">${answerChanged && i === rec.answer_idx ? '~' : '✓'}</span>
+        </div>
+      `).join('')}
+    </div>
+    ${answerChanged ? `<div style="font-family:var(--mono);font-size:10px;color:var(--amber);margin-top:-10px;margin-bottom:14px;">answer_idx geändert → ${working.answer_idx} (${escHtml((working.options || [])[working.answer_idx] || '')})</div>` : ''}
+
+    ${hasFrequency ? `
+    <div class="section-label">Häufigkeit <span style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:0.04em;">— Original</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:20px;">
+      ${metaRow('frequency_count', rec.frequency_count !== undefined ? rec.frequency_count : '—', cf.frequency_count)}
+      ${metaRow('frequency_unit', rec.frequency_unit !== undefined && rec.frequency_unit !== null ? rec.frequency_unit : '—', cf.frequency_unit)}
+    </div>` : ''}
+
+    <div class="section-label">Begründung (rationale_id = ${rec.rationale_id !== undefined ? rec.rationale_id : '—'}) <span style="font-size:9px;color:var(--text3);font-family:var(--mono);letter-spacing:0.04em;">— Original</span></div>
+    <div class="rationale-box" style="${rationaleChanged ? 'opacity:0.6;border-color:var(--amber);' : ''}">${escHtml(rationaleText)}</div>
+    ${rationaleChanged ? `<div style="font-family:var(--mono);font-size:10px;color:var(--amber);margin-top:-12px;margin-bottom:14px;">→ ${working.rationale_id}: ${escHtml(workingRationaleText)}</div>` : ''}
+
+    <div class="section-label">Punkteskala (point_scale_id = ${rec.point_scale_id !== undefined ? rec.point_scale_id : '—'}, point_value = ${rec.point_value !== undefined ? rec.point_value : '—'})</div>
+    <div class="rationale-box" style="${pointScaleChanged ? 'opacity:0.6;border-color:var(--amber);' : ''}">${escHtml(pointScaleText)}</div>
+  `;
+  document.getElementById('read-panel').innerHTML = html;
+}
+
+function metaRow(label, val, changed) {
+  return `<div style="background:var(--surface2);border:1px solid ${changed ? 'var(--amber)' : 'var(--border)'};border-radius:var(--radius);padding:7px 10px;${changed ? 'opacity:0.75;' : ''}">
+    <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:0.08em;margin-bottom:2px;">${label}</div>
+    <div style="font-family:var(--mono);font-size:11px;color:${changed ? 'var(--amber)' : 'var(--text2)'};">${escHtml(String(val))} ${changed ? '<span style="font-size:9px;opacity:0.7;">geändert</span>' : ''}</div>
+  </div>`;
+}
+
+function renderEditPanel(rec) {
+  const id = rec.id;
+  const orig = records[currentIdx];
+  const cf = changedFields[id] || {};
+  const hasFrequency = rec.frequency_count !== undefined || rec.frequency_unit !== undefined;
+
+  function resetBtn(field) {
+    return cf[field]
+      ? `<span class="reset-btn" onclick="resetField('${field}')" title="Auf Original zurücksetzen">↺ reset</span>`
+      : `<span class="reset-btn" style="opacity:0;pointer-events:none;">↺ reset</span>`;
+  }
+
+  // Kriterium als String für das Input-Feld
+  // Wenn das Original ein Array ist (z.B. komplette Kriterien-Liste), beibehalten
+  const criterionStr = Array.isArray(rec.criterion) ? JSON.stringify(rec.criterion) : (rec.criterion || '');
+  const criterionIsArr = Array.isArray(rec.criterion);
+
+  // Module bestimmen, um Standard-Skala anzubieten
+  const modCfg = getModuleConfig(rec);
+  const moduleOpts = Object.keys(MODULES);
+
+  const html = `
+    <div class="section-label" style="margin-bottom:10px;margin-top:2px;">Metadaten</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label">
+          <span class="locked-dot"></span>id
+        </div>
+        <input class="field-input" disabled value="${escHtml(rec.id)}">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label">
+          <span class="editable-dot"></span>module
+          <span class="changed-indicator ${cf.module ? 'visible' : ''}" id="chg-module"></span>
+          <span id="reset-module">${resetBtn('module')}</span>
+        </div>
+        <select class="field-input" id="edit-module" onchange="onFieldChange('module', this.value)">
+          ${moduleOpts.map(m => `<option value="${m}" ${rec.module===m?'selected':''}>${m}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field-group" style="margin-bottom:0;grid-column:1 / -1;">
+        <div class="field-label">
+          <span class="editable-dot"></span>criterion ${criterionIsArr ? '<span style="color:var(--text3);font-family:var(--mono);font-size:9px;">[array]</span>' : '<span style="color:var(--text3);font-family:var(--mono);font-size:9px;">[string]</span>'}
+          <span class="changed-indicator ${cf.criterion ? 'visible' : ''}" id="chg-criterion"></span>
+          <span id="reset-criterion">${resetBtn('criterion')}</span>
+        </div>
+        <textarea class="field-input" id="edit-criterion" rows="${criterionIsArr ? 2 : 1}"
+          oninput="onCriterionChange(this.value)">${escHtml(criterionStr)}</textarea>
+      </div>
+      <div class="field-group" style="margin-bottom:0;grid-column:1 / -1;">
+        <div class="field-label">
+          <span class="editable-dot"></span>scale_type
+          <span class="changed-indicator ${cf.scale_type ? 'visible' : ''}" id="chg-scale_type"></span>
+          <span id="reset-scale_type">${resetBtn('scale_type')}</span>
+        </div>
+        <input class="field-input" id="edit-scale_type" value="${escHtml(rec.scale_type || '')}"
+          oninput="onFieldChange('scale_type', this.value)">
+      </div>
+    </div>
+
+    <hr class="field-divider">
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="editable-dot"></span>stem
+        <span class="changed-indicator ${cf.stem ? 'visible' : ''}" id="chg-stem"></span>
+        <span id="reset-stem">${resetBtn('stem')}</span>
+      </div>
+      <textarea class="field-input" id="edit-stem" rows="4"
+        oninput="onFieldChange('stem', this.value)">${escHtml(rec.stem || '')}</textarea>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="editable-dot"></span>answer_idx
+        <span class="changed-indicator ${cf.answer_idx ? 'visible' : ''}" id="chg-answer_idx"></span>
+        <span id="reset-answer_idx">${resetBtn('answer_idx')}</span>
+      </div>
+      <div class="answer-selector" id="answer-selector">
+        ${(rec.options || []).map((o, i) => `
+          <div class="answer-option ${i === rec.answer_idx ? 'active' : ''}"
+               onclick="selectAnswer(${i})">
+            <span class="ans-idx">${i}</span>
+            <span>${escHtml(o)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    ${hasFrequency ? `
+    <hr class="field-divider">
+    <div class="section-label" style="margin-bottom:10px;">Häufigkeit <span style="font-size:9px;color:var(--text3);">— nur M5</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label">
+          <span class="editable-dot"></span>frequency_count
+          <span class="changed-indicator ${cf.frequency_count ? 'visible' : ''}" id="chg-frequency_count"></span>
+          <span id="reset-frequency_count">${resetBtn('frequency_count')}</span>
+        </div>
+        <input type="number" class="field-input" id="edit-frequency_count"
+          value="${rec.frequency_count !== undefined && rec.frequency_count !== null ? rec.frequency_count : ''}"
+          oninput="onFieldChange('frequency_count', this.value === '' ? null : Number(this.value))">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label">
+          <span class="editable-dot"></span>frequency_unit
+          <span class="changed-indicator ${cf.frequency_unit ? 'visible' : ''}" id="chg-frequency_unit"></span>
+          <span id="reset-frequency_unit">${resetBtn('frequency_unit')}</span>
+        </div>
+        <select class="field-input" id="edit-frequency_unit"
+          onchange="onFieldChange('frequency_unit', this.value === '' ? null : this.value)">
+          ${['','pro_tag','pro_woche','pro_monat'].map(u =>
+            `<option value="${u}" ${(rec.frequency_unit||'')===u?'selected':''}>${u || '— (null)'}</option>`
+          ).join('')}
+        </select>
+      </div>
+    </div>` : ''}
+
+    <hr class="field-divider">
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="editable-dot"></span>rationale_id
+        <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">— Index in rationale_options</span>
+        <span class="changed-indicator ${cf.rationale_id ? 'visible' : ''}" id="chg-rationale_id"></span>
+        <span id="reset-rationale_id">${resetBtn('rationale_id')}</span>
+      </div>
+      <select class="field-input" id="edit-rationale_id"
+        onchange="onFieldChange('rationale_id', Number(this.value))"
+        style="font-family:var(--mono);font-size:11px;">
+        ${(rec.rationale_options || []).map((opt, i) =>
+          `<option value="${i}" ${rec.rationale_id===i?'selected':''}>[${i}] ${escHtml(opt)}</option>`
+        ).join('')}
+      </select>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:4px;">
+        ${(rec.rationale_options || []).length} Optionen verfügbar
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="editable-dot"></span>point_scale_id
+        <span style="font-size:9px;color:var(--text3);font-family:var(--mono);">— Index in point_scale_options</span>
+        <span class="changed-indicator ${cf.point_scale_id ? 'visible' : ''}" id="chg-point_scale_id"></span>
+        <span id="reset-point_scale_id">${resetBtn('point_scale_id')}</span>
+      </div>
+      <select class="field-input" id="edit-point_scale_id"
+        onchange="onFieldChange('point_scale_id', Number(this.value))"
+        style="font-family:var(--mono);font-size:11px;">
+        ${(rec.point_scale_options || []).map((opt, i) =>
+          `<option value="${i}" ${rec.point_scale_id===i?'selected':''}>[${i}] ${escHtml(opt)}</option>`
+        ).join('')}
+      </select>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="editable-dot"></span>point_value
+        <span class="changed-indicator ${cf.point_value ? 'visible' : ''}" id="chg-point_value"></span>
+        <span id="reset-point_value">${resetBtn('point_value')}</span>
+      </div>
+      <input type="number" class="field-input" id="edit-point_value"
+        value="${rec.point_value !== undefined && rec.point_value !== null ? rec.point_value : ''}"
+        oninput="onFieldChange('point_value', this.value === '' ? null : Number(this.value))">
+    </div>
+
+    <hr class="field-divider">
+
+    <div class="field-group">
+      <div class="field-label">
+        <span class="editable-dot"></span>split
+        <span class="changed-indicator ${cf.split ? 'visible' : ''}" id="chg-split"></span>
+        <span id="reset-split">${resetBtn('split')}</span>
+      </div>
+      <select class="field-input" id="edit-split" onchange="onFieldChange('split', this.value)">
+        ${['train','test','dev'].map(s => `<option ${rec.split===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+
+    <hr class="field-divider">
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label"><span class="locked-dot"></span>model</div>
+        <input class="field-input" disabled value="${escHtml(rec.model || '—')}">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label"><span class="locked-dot"></span>model_version</div>
+        <input class="field-input" disabled value="${escHtml(rec.model_version !== undefined ? String(rec.model_version) : '—')}">
+      </div>
+      <div class="field-group" style="margin-bottom:0;">
+        <div class="field-label"><span class="locked-dot"></span>temperature</div>
+        <input class="field-input" disabled value="${rec.temperature !== null && rec.temperature !== undefined ? rec.temperature : '—'}">
+      </div>
+    </div>
+
+    <hr class="field-divider">
+
+    <div class="field-group">
+      <div class="field-label"><span style="width:5px;height:5px;border-radius:50%;background:var(--purple);display:inline-block;"></span>Kommentar / Begründung</div>
+      <textarea class="field-input" id="edit-comment" rows="3"
+        placeholder="Optionaler Kommentar zur Entscheidung..."
+        oninput="onCommentChange(this.value)">${comments[id] || ''}</textarea>
+    </div>
+  `;
+  document.getElementById('edit-panel').innerHTML = html;
+}
+
+/* Spezialhandler für Kriterium: kann String oder JSON-Array sein */
+function onCriterionChange(value) {
+  const orig = records[currentIdx];
+  const trimmed = value.trim();
+  let parsed = value;
+  // Wenn original Array war oder Input mit [ beginnt: als JSON-Array parsen
+  if (Array.isArray(orig.criterion) || trimmed.startsWith('[')) {
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch (e) {
+      // Bei Parse-Fehler: als String beibehalten
+      parsed = trimmed;
+    }
+  }
+  onFieldChange('criterion', parsed);
+}
+
+function onFieldChange(field, value) {
+  const id = records[currentIdx].id;
+  const original = records[currentIdx];
+
+  if (!edits[id]) edits[id] = {};
+  edits[id][field] = value;
+
+  // Compare against original — arrays need JSON comparison
+  const originalVal = original[field];
+  const isDifferent = JSON.stringify(value) !== JSON.stringify(originalVal);
+
+  if (!changedFields[id]) changedFields[id] = {};
+  changedFields[id][field] = isDifferent;
+
+  const chgEl = document.getElementById('chg-' + field);
+  if (chgEl) chgEl.classList.toggle('visible', isDifferent);
+
+  // Bei rationale_id oder point_scale_id: Read-Panel neu rendern,
+  // damit die angezeigten Texte (rationale, point_scale) sich aktualisieren
+  refreshReadPanelDiff();
+}
+
+function onCommentChange(value) {
+  const id = records[currentIdx].id;
+  comments[id] = value;
+}
+
+/* Extrahiert den Punktwert aus einem point_scale_options-Text,
+   z.B. "überwiegend selbständig = 1 Punkt" -> 1.
+   Wichtig: point_value ergibt sich NICHT aus dem Index, sondern aus dem
+   Text selbst (Modul 4 hat z.B. Skalen, die nicht aufsteigend sortiert sind). */
+function parsePointValueFromScaleText(text) {
+  if (typeof text !== 'string') return null;
+  const match = text.match(/=\s*(\d+)\s*Punkt/i);
+  return match ? Number(match[1]) : null;
+}
+
+function selectAnswer(idx) {
+  const id = records[currentIdx].id;
+  const orig = records[currentIdx];
+  // Arbeitsstand VOR dieser Änderung (inkl. bereits vorhandener Edits)
+  const working = getCurrentRecord();
+  const prevAnswerIdx = working.answer_idx;
+  const delta = idx - prevAnswerIdx;
+
+  if (!edits[id]) edits[id] = {};
+  if (!changedFields[id]) changedFields[id] = {};
+
+  // 1) answer_idx setzen
+  edits[id].answer_idx = idx;
+  changedFields[id].answer_idx = (idx !== orig.answer_idx);
+
+  // 2) rationale_id um denselben Delta verschieben wie answer_idx
+  //    (rationale_options ist pro Kriterium in Blöcken organisiert, deren
+  //    Breite der Anzahl der Antwortoptionen entspricht — eine Verschiebung
+  //    um denselben Delta bleibt daher innerhalb des korrekten Blocks)
+  if (delta !== 0 && Array.isArray(working.rationale_options) && typeof working.rationale_id === 'number') {
+    const newRationaleId = working.rationale_id + delta;
+    if (newRationaleId >= 0 && newRationaleId < working.rationale_options.length) {
+      edits[id].rationale_id = newRationaleId;
+      changedFields[id].rationale_id = (newRationaleId !== orig.rationale_id);
+    } else {
+      showToast('⚠ rationale_id liegt außerhalb des gültigen Bereichs — bitte manuell prüfen');
+    }
+  }
+
+  // 3) point_scale_id ebenfalls um denselben Delta verschieben.
+  //    point_value wird NICHT rechnerisch verschoben, sondern aus dem Text
+  //    der neuen point_scale_options-Position geparst, da sich point_value
+  //    nicht zwingend am Index orientiert (siehe Modul 4: z.B. Sondennahrung-
+  //    Skala ist nicht monoton aufsteigend).
+  if (delta !== 0 && Array.isArray(working.point_scale_options) && typeof working.point_scale_id === 'number') {
+    const newPointScaleId = working.point_scale_id + delta;
+    if (newPointScaleId >= 0 && newPointScaleId < working.point_scale_options.length) {
+      edits[id].point_scale_id = newPointScaleId;
+      changedFields[id].point_scale_id = (newPointScaleId !== orig.point_scale_id);
+
+      const parsedValue = parsePointValueFromScaleText(working.point_scale_options[newPointScaleId]);
+      if (parsedValue !== null) {
+        edits[id].point_value = parsedValue;
+        changedFields[id].point_value = (parsedValue !== orig.point_value);
+      } else {
+        showToast('⚠ point_value konnte nicht automatisch aus point_scale_options gelesen werden');
+      }
+    } else {
+      showToast('⚠ point_scale_id liegt außerhalb des gültigen Bereichs — bitte manuell prüfen');
+    }
+  }
+
+  // Editor-Panel komplett neu rendern, damit rationale_id-/point_scale_id-
+  // Dropdowns und das point_value-Feld den neuen, synchronisierten Stand zeigen
+  renderEditPanel(getCurrentRecord());
+  refreshReadPanelDiff();
+}
+
+function resetField(field) {
+  const orig = records[currentIdx];
+  const id = orig.id;
+  const originalVal = orig[field];
+
+  // Reset edit state
+  if (edits[id]) delete edits[id][field];
+  if (changedFields[id]) changedFields[id][field] = false;
+
+  // Update the DOM input directly
+  if (field === 'stem') {
+    document.getElementById('edit-stem').value = originalVal;
+  } else if (field === 'difficulty') {
+    const el = document.getElementById('edit-difficulty');
+    if (el) el.value = originalVal;
+  } else if (field === 'split') {
+    document.getElementById('edit-split').value = originalVal;
+  } else if (field === 'criterion') {
+    const el = document.getElementById('edit-criterion');
+    if (el) el.value = Array.isArray(originalVal) ? JSON.stringify(originalVal) : (originalVal || '');
+  } else if (field === 'scale_type') {
+    document.getElementById('edit-scale_type').value = originalVal || '';
+  } else if (field === 'module') {
+    const el = document.getElementById('edit-module');
+    if (el) el.value = originalVal;
+  } else if (field === 'rationale_id') {
+    const el = document.getElementById('edit-rationale_id');
+    if (el) el.value = originalVal;
+  } else if (field === 'point_scale_id') {
+    const el = document.getElementById('edit-point_scale_id');
+    if (el) el.value = originalVal;
+  } else if (field === 'point_value') {
+    const el = document.getElementById('edit-point_value');
+    if (el) el.value = originalVal !== null && originalVal !== undefined ? originalVal : '';
+  } else if (field === 'frequency_count') {
+    const el = document.getElementById('edit-frequency_count');
+    if (el) el.value = originalVal !== null && originalVal !== undefined ? originalVal : '';
+  } else if (field === 'frequency_unit') {
+    const el = document.getElementById('edit-frequency_unit');
+    if (el) el.value = originalVal || '';
+  } else if (field === 'answer_idx') {
+    // Verknüpfte Felder ebenfalls zurücksetzen — sie wurden synchron zu
+    // answer_idx verschoben und blieben sonst inkonsistent zum Original
+    ['rationale_id', 'point_scale_id', 'point_value'].forEach(linkedField => {
+      if (edits[id]) delete edits[id][linkedField];
+      if (changedFields[id]) changedFields[id][linkedField] = false;
+    });
+    if (edits[id]) edits[id].answer_idx = originalVal;
+    // Mehrere Felder betroffen → Editor-Panel komplett neu rendern
+    renderEditPanel(getCurrentRecord());
+  }
+
+  // Clear indicator and reset button
+  const chgEl = document.getElementById('chg-' + field);
+  if (chgEl) chgEl.classList.remove('visible');
+  const resetEl = document.getElementById('reset-' + field);
+  if (resetEl) resetEl.innerHTML = `<span class="reset-btn" style="opacity:0;pointer-events:none;">↺ reset</span>`;
+
+  refreshReadPanelDiff();
+}
+
+
+function resetAllFields() {
+  const orig = records[currentIdx];
+  const id = orig.id;
+  edits[id] = {};
+  changedFields[id] = {};
+  renderRecord(currentIdx);
+  showToast('Alle Felder zurückgesetzt — ' + id);
+}
+
+
+function refreshReadPanelDiff() {
+  const original = records[currentIdx];
+  const working  = getCurrentRecord();
+  renderReadPanel(original, working);
+}
+
+function syncReadPanel() {}
+
+function setStatus(s) {
+  const id = records[currentIdx].id;
+  statuses[id] = s;
+  updateStatusButtons(s);
+}
+
+function updateStatusButtons(s) {
+  document.getElementById('btn-validated').className = 'status-btn' + (s==='validated' ? ' active-validated' : '');
+  document.getElementById('btn-peer').className      = 'status-btn' + (s==='peer_review' ? ' active-peer' : '');
+  document.getElementById('btn-rejected').className  = 'status-btn' + (s==='rejected'    ? ' active-rejected' : '');
+}
+
+function saveRecord() {
+  const id = records[currentIdx].id;
+  if (!statuses[id]) { showToast('Bitte Status setzen vor dem Speichern.'); return; }
+  showToast('Gespeichert — ' + id);
+  if (currentIdx < records.length - 1) {
+    setTimeout(() => navigate(1), 500);
+  } else {
+    showToast('Alle Datensätze bearbeitet. Export über "Export →".');
+  }
+}
+
+function navigate(dir) {
+  const next = currentIdx + dir;
+  if (next < 0 || next >= records.length) return;
+  renderRecord(next);
+}
+
+function showExportModal() {
+  const m = document.getElementById('export-modal-wrap');
+  m.style.display = 'flex';
+}
+
+function hideExportModal() {
+  document.getElementById('export-modal-wrap').style.display = 'none';
+}
+
+function exportAll(format) {
+  hideExportModal();
+
+  // Build filename: strip existing extension, add _v, add new extension
+  // e.g. m1_mobilitaet_gemini_3_26-04-20_11-00.jsonl → m1_mobilitaet_gemini_3_26-04-20_11-00_v.json
+  const base = inputFilename.replace(/\.(jsonl|json)$/i, '');
+  const ext = format === 'json' ? '.json' : '.jsonl';
+  const filename = base + '_v' + ext;
+
+  const exportedRecords = records.map(base => {
+    const id = base.id;
+    const corrected = Object.assign({}, base, edits[id] || {});
+    const original = Object.assign({}, base);
+    const diff = {};
+    Object.keys(corrected).forEach(k => {
+      if (JSON.stringify(corrected[k]) !== JSON.stringify(original[k])) diff[k] = { from: original[k], to: corrected[k] };
+    });
+    return {
+      ...corrected,
+      _validation: {
+        status: statuses[id] || 'pending',
+        comment: comments[id] || '',
+        diff: diff,
+        reviewed_at: new Date().toISOString()
+      }
+    };
+  });
+
+  let content, mime;
+  if (format === 'json') {
+    content = JSON.stringify(exportedRecords, null, 2);
+    mime = 'application/json';
+  } else {
+    content = exportedRecords.map(r => JSON.stringify(r)).join('\n');
+    mime = 'application/x-ndjson';
+  }
+
+  const blob = new Blob([content], { type: mime });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  showToast('Export als ' + filename);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function escHtml(s) {
+  if (s === null || s === undefined) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

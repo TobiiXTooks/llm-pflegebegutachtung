@@ -1,0 +1,1351 @@
+[
+  {
+    "id": "14_gemini_001",
+    "module": "M1",
+    "criterion": "positionswechsel im bett",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann sich im Liegen eigenständig auf die Seite drehen. Um jedoch vom Liegen in das Sitzen an der Bettkante zu kommen, muss eine Pflegekraft den Oberkörper mit deutlichem Kraftaufwand anheben und stützen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 2,
+    "rationale_options": [
+      "F4.1.1: Alle Teilhandlungen werden allein bewältigt = selbständig",
+      "F4.1.1: Hilfe beim Zurechtlegen von Hilfsmitteln nötig = überwiegend selbständig",
+      "F4.1.1: Erhebliche physische Unterstützung beim Aufrichten erforderlich = überwiegend unselbständig",
+      "F4.1.1: Vollständige Übernahme der Bewegung nötig = unselbständig"
+    ],
+    "rationale_id": 2,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 2,
+    "point_value": 2,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_002",
+    "module": "M1",
+    "criterion": "halten einer stabilen sitzposition",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann auf der Bettkante sitzen, muss jedoch von einer Hilfsperson aktiv an der Hüfte gehalten werden, damit sie nicht zur Seite wegkippt.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 2,
+    "rationale_options": [
+      "F4.1.2: Alleiniges Sitzen = selbständig",
+      "F4.1.2: Geringe Hilfe nötig = überwiegend selbständig",
+      "F4.1.2: Ständiges physisches Halten erforderlich = überwiegend unselbständig",
+      "F4.1.2: Sitzen unmöglich = unselbständig"
+    ],
+    "rationale_id": 2,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 2,
+    "point_value": 2,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "rejected",
+      "comment": "Die Bettkante ist kein Sitzmöbel, leider in den Begutachtungsrichtlinien nicht eindeutig genug beschrieben.",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_003",
+    "module": "M1",
+    "criterion": "umsetzen",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann sich nicht mehr eigenständig umsetzen. Eine Hilfsperson muss die Beine und den Oberkörper vollständig führen und teilweise das Gewicht tragen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 2,
+    "rationale_options": [
+      "F4.1.3: Alleiniges Umsetzen = selbständig",
+      "F4.1.3: Geringe Hilfe nötig = überwiegend selbständig",
+      "F4.1.3: Erhebliche physische Unterstützung nötig = überwiegend unselbständig",
+      "F4.1.3: Wechsel nur mit Lifter möglich = unselbständig"
+    ],
+    "rationale_id": 2,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 2,
+    "point_value": 2,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "peer_review",
+      "comment": "",
+      "diff": {
+        "stem": {
+          "from": "Die versicherte Person kann sich nicht mehr eigenständig umsetzen. Eine Hilfsperson muss die Beine und den Oberkörper vollständig führen und das Gewicht tragen.",
+          "to": "Die versicherte Person kann sich nicht mehr eigenständig umsetzen. Eine Hilfsperson muss die Beine und den Oberkörper vollständig führen und teilweise das Gewicht tragen."
+        }
+      },
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_004",
+    "module": "M1",
+    "criterion": "fortbewegung innerhalb des wohnbereichs",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann sich innerhalb der Wohnung nur bewegen, wenn sie von einer Hilfsperson aktiv am Gürtel festgehalten und gegen Umkippen gesichert wird.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 2,
+    "rationale_options": [
+      "F4.1.4: Alleinige Fortbewegung = selbständig",
+      "F4.1.4: Beaufsichtigung nötig = überwiegend selbständig",
+      "F4.1.4: Ständiges Führen/Sichern/Stützen nötig = überwiegend unselbständig",
+      "F4.1.4: Fortbewegung unmöglich = unselbständig"
+    ],
+    "rationale_id": 2,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 2,
+    "point_value": 2,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_005",
+    "module": "M1",
+    "criterion": "treppensteigen",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann die Treppe in den ersten Stock steigen, sofern eine Hilfsperson sie bei jedem Schritt an der Hand führt und stabilisiert.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 2,
+    "rationale_options": [
+      "F4.1.5: Alleiniges Steigen = selbständig",
+      "F4.1.5: Geringe Hilfe nötig = überwiegend selbständig",
+      "F4.1.5: Physisches Führen/Stützen bei jedem Schritt nötig = überwiegend unselbständig",
+      "F4.1.5: Treppensteigen unmöglich = unselbständig"
+    ],
+    "rationale_id": 2,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 2,
+    "point_value": 2,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_006",
+    "module": "M2",
+    "criterion": "erkennen von personen aus dem näheren umfeld",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person erkennt ihr Spiegelbild nicht mehr und beginnt, mit der Person im Spiegel zu schimpfen, da sie glaubt, eine fremde Frau sei in ihr Badezimmer eingedrungen.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.1: Personen werden erkannt = vorhanden",
+      "F4.2.1: Personen werden verzögert erkannt = größtenteils vorhanden",
+      "F4.2.1: Nur engste Angehörige werden erkannt = gering vorhanden",
+      "F4.2.1: Unfähigkeit, Personen (einschl. der eigenen Person) zu identifizieren = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_007",
+    "module": "M2",
+    "criterion": "örtliche orientierung",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person steht hilflos vor der eigenen Wohnungstür (von innen), weil sie den Flur hinter der Tür für eine fremde Straße hält.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.2: Orientierung sicher = vorhanden",
+      "F4.2.2: Findet im Nahbereich zurück = größtenteils vorhanden",
+      "F4.2.2: Findet sich nur mühsam in der Wohnung zurecht = gering vorhanden",
+      "F4.2.2: Völlige örtliche Desorientierung (Umgebung wird als fremd wahrgenommen) = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_008",
+    "module": "M2",
+    "criterion": "zeitliche orientierung",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person kann weder das aktuelle Jahr noch die Jahreszeit benennen. Auch die Tageszeiten (Morgen/Abend) verwechselt sie häufig.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.3: Kenntnis von Datum/Uhrzeit/Tag = vorhanden",
+      "F4.2.3: Leichte Unsicherheiten (z.B. Wochentag) = größtenteils vorhanden",
+      "F4.2.3: Nur noch grobe Orientierung (z.B. Tag/Nacht) = gering vorhanden",
+      "F4.2.3: Zeitliches Raster ist völlig verloren gegangen = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_009",
+    "module": "M2",
+    "criterion": "erinnern an wesentliche ereignisse oder beobachtungen",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person hat vergessen, dass sie vor zwei Stunden Besuch von ihrem Sohn hatte, und behauptet weinend, niemand würde sie besuchen.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.4: Gedächtnis intakt = vorhanden",
+      "F4.2.4: Details fehlen = größtenteils vorhanden",
+      "F4.2.4: Behält Informationen für kurze Zeit = gering vorhanden",
+      "F4.2.4: Informationen werden nach kürzester Zeit (Minuten) gelöscht = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_010",
+    "module": "M2",
+    "criterion": "steuern von mehrschrittigen alltagshandlungen",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person benötigt für das Ankleiden eine Liste mit der Reihenfolge der Kleidungsstücke, sonst würde sie die Unterwäsche über die Hose ziehen.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 2,
+    "rationale_options": [
+      "F4.2.5: Handlungssteuerung gelingt = vorhanden",
+      "F4.2.5: Braucht mündliche Impulse = größtenteils vorhanden",
+      "F4.2.5: Benötigt externe Strukturierungshilfe (Listen/Anleitung) = gering vorhanden",
+      "F4.2.5: Keine Steuerung möglich = nicht vorhanden"
+    ],
+    "rationale_id": 2,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 2,
+    "point_value": 2,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_011",
+    "module": "M2",
+    "criterion": "treffen von entscheidungen im alltagsleben",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person kann nicht mehr entscheiden, ob sie bei Schmerzen eine Tablette nehmen möchte. Sie überlässt die Entscheidung komplett der Pflegekraft.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.6: Eigenständige Entscheidung = vorhanden",
+      "F4.2.6: Entscheidung mit Beratung = größtenteils vorhanden",
+      "F4.2.6: Nur triviale Entscheidungen möglich = gering vorhanden",
+      "F4.2.6: Unfähigkeit, eigene Entscheidungen zu treffen oder zu äußern = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_012",
+    "module": "M2",
+    "criterion": "verstehen von sach- und personenzusammenhängen",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person hält den Besuch der Pflegekraft für den Einbruch eines Fremden und reagiert panisch.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.7: Sachzusammenhänge klar = vorhanden",
+      "F4.2.7: Gelegentliche Missverständnisse = größtenteils vorhanden",
+      "F4.2.7: Zusammenhänge oft verfälscht = gering vorhanden",
+      "F4.2.7: Vollständige Fehlinterpretation der Realität = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_013",
+    "module": "M2",
+    "criterion": "erkennen von risiken und gefahren",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person erkennt Gefahren im Straßenverkehr nicht mehr und läuft bei Rot über die Ampel, ohne auf die herannahenden Autos zu achten.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.8: Risikoeinschätzung vorhanden = vorhanden",
+      "F4.2.8: Benötigt gelegentlich Hinweise = größtenteils vorhanden",
+      "F4.2.8: Massive Defizite im Gefahrenbewusstsein = gering vorhanden",
+      "F4.2.8: Gefahren werden gar nicht mehr wahrgenommen = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_014",
+    "module": "M2",
+    "criterion": "mitteilen von elementaren bedürfnissen",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person kann zwar flüssig sprechen, aber der Inhalt ist 'Wortsalat'. Die Sätze ergeben keinen Sinn mehr, Bedürfnisse können nicht entnommen werden.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.9: Bedürfnisse verständlich geäußert = vorhanden",
+      "F4.2.9: Äußerung durch Störungen erschwert = größtenteils vorhanden",
+      "F4.2.9: Nur bruchstückhafte Mitteilung = gering vorhanden",
+      "F4.2.9: Lautäußerungen ohne Mitteilungswert (Wortsalat) = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_015",
+    "module": "M2",
+    "criterion": "verstehen von aufforderungen",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person lächelt freundlich, wenn sie angesprochen wird, führt aber keine der geforderten Handlungen (z. B. 'Gib mir bitte die Hand') aus, da sie den Inhalt der Worte nicht erfasst.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.10: Verstehen ungestört = vorhanden",
+      "F4.2.10: Benötigt einfache Sprache = größtenteils vorhanden",
+      "F4.2.10: Versteht nur noch Bruchstücke = gering vorhanden",
+      "F4.2.10: Sprachverständnis für Aufforderungen fehlt völlig = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_016",
+    "module": "M2",
+    "criterion": "beteiligung an einem gespräch",
+    "scale_type": "faehigkeit",
+    "stem": "Die versicherte Person reagiert gar nicht mehr auf Ansprache und gibt keine verbalen Antworten, auch nicht bei direktem Blickkontakt.",
+    "options": [
+      "vorhanden/unbeeinträchtigt",
+      "größtenteils vorhanden",
+      "gering vorhanden",
+      "nicht vorhanden"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.2.11: Gesprächsführung möglich = vorhanden",
+      "F4.2.11: Eingeschränkte Interaktion = größtenteils vorhanden",
+      "F4.2.11: Nur rudimentäre Reaktion = gering vorhanden",
+      "F4.2.11: Keine soziale Interaktion via Sprache möglich = nicht vorhanden"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_017",
+    "module": "M4",
+    "criterion": "waschen des vorderen oberkörpers",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person ist aufgrund einer Lähmung beider Arme nicht in der Lage, sich am Oberkörper zu waschen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.1: Selbständig = 0",
+      "F4.4.1: Überwiegend selbständig = 1",
+      "F4.4.1: Überwiegend unselbständig = 2",
+      "F4.4.1: Keine Eigenbeteiligung möglich = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_018",
+    "module": "M4",
+    "criterion": "körperpflege im bereich des kopfes",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann die Gesichtspflege und das Kämmen allein, benötigt aber Hilfe beim Reinigen der Ohren und beim Kürzen der Nasenhaare.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 1,
+    "rationale_options": [
+      "F4.4.2: Alles autark = selbständig",
+      "F4.4.2: Hilfe bei Randbereichen der Kopfpflege = überwiegend selbständig",
+      "F4.4.2: Hilfe bei Zähnen/Rasur = überwiegend unselbständig",
+      "F4.4.2: Vollübernahme = unselbständig"
+    ],
+    "rationale_id": 1,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 1,
+    "point_value": 1,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_019",
+    "module": "M4",
+    "criterion": "waschen des intimbereichs",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Aufgrund einer Querschnittslähmung muss der Intimbereich sowie die Gesäßfalte vollständig durch die Pflegekraft gewaschen werden.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.3: Autark = selbständig",
+      "F4.4.3: Überwiegend selbständig = 1",
+      "F4.4.3: Überwiegend unselbständig = 2",
+      "F4.4.3: Vollständige Übernahme der Intimpflege = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_020",
+    "module": "M4",
+    "criterion": "duschen und baden einschließlich der haarpflege",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann unter Aufsicht in die Wanne steigen, muss aber während des gesamten Bades gewaschen und abgetrocknet werden.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.4: Selbständig = 0",
+      "F4.4.4: Überwiegend selbständig = 1",
+      "F4.4.4: Überwiegend unselbständig = 2",
+      "F4.4.4: Übernahme fast aller Waschvorgänge = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_021",
+    "module": "M4",
+    "criterion": "ankleiden des oberkörpers",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person zieht sich Unterhemd und Pullover allein an, benötigt aber Hilfe beim Schließen des Reißverschlusses ihrer Strickjacke.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 1,
+    "rationale_options": [
+      "F4.4.5: Autark = selbständig",
+      "F4.4.5: Hilfe nur bei Verschlüssen (Reißverschluss/Knöpfe) = überwiegend selbständig",
+      "F4.4.5: Hilfe beim Überziehen über Kopf/Arme = überwiegend unselbständig",
+      "F4.4.5: Vollständige Übernahme = unselbständig"
+    ],
+    "rationale_id": 1,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 1,
+    "point_value": 1,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_022",
+    "module": "M4",
+    "criterion": "ankleiden des unterkörpers",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person zieht sich die Hose im Liegen selbst an; das Hochziehen über das Gesäß im Stehen muss jedoch die Pflegekraft übernehmen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 1,
+    "rationale_options": [
+      "F4.4.6: Autark = selbständig",
+      "F4.4.6: Geringe Hilfe = überwiegend selbständig",
+      "F4.4.6: Hilfe beim Hochziehen über das Gesäß (zentraler Schritt) = überwiegend unselbständig",
+      "F4.4.6: Vollübernahme = unselbständig"
+    ],
+    "rationale_id": 1,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 1,
+    "point_value": 2,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "peer_review",
+      "comment": "",
+      "diff": {
+        "answer_idx": {
+          "from": 2,
+          "to": 1
+        },
+        "rationale_id": {
+          "from": 2,
+          "to": 1
+        },
+        "point_scale_id": {
+          "from": 2,
+          "to": 1
+        }
+      },
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_023",
+    "module": "M4",
+    "criterion": "mundgerechtes zubereiten der speisen und getränke",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann Speisen nicht selbst zerkleinern; jede Mahlzeit muss püriert oder sehr fein geschnitten serviert werden.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.7: Autark = selbständig",
+      "F4.4.7: Geringe Hilfe = überwiegend selbständig",
+      "F4.4.7: Wesentliche Hilfe = überwiegend unselbständig",
+      "F4.4.7: Vollständige Übernahme der mundgerechten Zubereitung = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_024",
+    "module": "M4",
+    "criterion": "essen",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person wird komplett von der Pflegekraft mit dem Löffel gefüttert und schluckt die Nahrung passiv.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.8: Isst autark = selbständig",
+      "F4.4.8: Überwiegend selbständig = 3",
+      "F4.4.8: Überwiegend unselbständig = 6",
+      "F4.4.8: Vollständige Übernahme (Füttern) = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      3,
+      6,
+      9
+    ],
+    "point_scale_id": 3,
+    "point_value": 9,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_025",
+    "module": "M4",
+    "criterion": "trinken",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann nur trinken, wenn die Pflegekraft den Becher hält und ihr die Flüssigkeit schluckweise verabreicht.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.9: Autark = selbständig",
+      "F4.4.9: Geringe Hilfe = überwiegend selbständig",
+      "F4.4.9: Wesentliche Hilfe = überwiegend unselbständig",
+      "F4.4.9: Vollständiges Eingeben der Flüssigkeit = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_026",
+    "module": "M4",
+    "criterion": "benutzen einer toilette oder eines toilettenstuhls",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann die Toilette nicht mehr erreichen; sie ist auf die Nutzung von Bettschüsseln angewiesen, die komplett von Dritten gehandhabt werden.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.10: Autark = selbständig",
+      "F4.4.10: Überwiegend selbständig = 2",
+      "F4.4.10: Überwiegend unselbständig = 4",
+      "F4.4.10: Vollständige Übernahme der Ausscheidungsvorgänge = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "point_scale_id": 3,
+    "point_value": 6,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_027",
+    "module": "M4",
+    "criterion": "bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person hat einen suprapubischen Dauerkatheter, die Handhabung bzw. die Entleerung des Beutels muss von einer Pflegeperson übernommen werden.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.11: Autark = selbständig",
+      "F4.4.11: Überwiegend selbständig = 1",
+      "F4.4.11: Überwiegend unselbständig = 2",
+      "F4.4.11: Professionelle Versorgung der Katheterstelle nötig = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "peer_review",
+      "comment": "",
+      "diff": {
+        "stem": {
+          "from": "Die versicherte Person hat einen suprapubischen Dauerkatheter; die Einstichstelle muss von einer Pflegefachkraft gereinigt und verbunden werden.",
+          "to": "Die versicherte Person hat einen suprapubischen Dauerkatheter, die Handhabung bzw. die Entleerung des Beutels muss von einer Pflegeperson übernommen werden."
+        }
+      },
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_028",
+    "module": "M4",
+    "criterion": "bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person hat eine Stuhlinkontinenz und verschmiert den Stuhl oft an der Wand oder im Bett, bevor Hilfe eintrifft.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.4.12: Autark = selbständig",
+      "F4.4.12: Überwiegend selbständig = 1",
+      "F4.4.12: Überwiegend unselbständig = 2",
+      "F4.4.12: Vollständige Übernahme der massiven Folgenbeseitigung = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_029",
+    "module": "M6",
+    "criterion": "gestaltung des tagesablaufs und anpassung an veränderungen",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann nur mit massiver Unterstützung durch eine 24-Stunden-Kraft durch den Tag geleitet werden. Jede Stunde muss neu strukturiert werden.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F6.6.1: Autark = selbständig",
+      "F6.6.1: Überwiegend selbständig = 1",
+      "F6.6.1: Überwiegend unselbständig = 2",
+      "F6.6.1: Vollständiger Verlust der Tagesstrukturierung = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_030",
+    "module": "M6",
+    "criterion": "ruhen und schlafen",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person leidet unter 'Sundowning'. Abends wird sie unruhig und braucht die ständige Anwesenheit einer Pflegekraft, um nicht wegzulaufen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F6.6.2: Autark = selbständig",
+      "F6.6.2: Überwiegend selbständig = 1",
+      "F6.6.2: Überwiegend unselbständig = 2",
+      "F6.6.2: Massive Steuerung der Nachtruhe nötig = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_031",
+    "module": "M6",
+    "criterion": "sich beschäftigen",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person kann auch mit bereitgelegten Materialien keine Beschäftigung durchführen und ist vollständig auf Fremdgestaltung angewiesen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.6.3: Beschäftigungen werden eigenständig ausgewählt, begonnen und beendet = selbständig",
+      "F4.6.3: Beschäftigung gelingt überwiegend, einzelne Vorbereitung oder Erinnerung ist nötig = überwiegend selbständig",
+      "F4.6.3: Beschäftigung gelingt nur mit wiederholter Anleitung, Motivation oder Begleitung = überwiegend unselbständig",
+      "F4.6.3: Eigenständige Beschäftigung ist nicht möglich = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "ChatGPT",
+    "model_version": "5.5",
+    "temperature": null,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_032",
+    "module": "M6",
+    "criterion": "vornehmen von in die zukunft gerichteten planungen",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person versteht zukünftige Zeitbezüge nicht ausreichend und kann keine eigenen Planungen für kommende Ereignisse erstellen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F4.6.4: Zukunftsbezogene Planungen werden selbständig vorgenommen = selbständig",
+      "F4.6.4: Zukunftsplanung gelingt überwiegend, einzelne Erinnerung oder Unterstützung ist nötig = überwiegend selbständig",
+      "F4.6.4: Zukunftsplanung gelingt nur mit wiederholter Anleitung oder stellvertretender Strukturierung = überwiegend unselbständig",
+      "F4.6.4: Zukunftsbezogene Planungen können nicht selbst vorgenommen werden = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "ChatGPT",
+    "model_version": "5.5",
+    "temperature": null,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_033",
+    "module": "M6",
+    "criterion": "interaktion mit personen im direkten kontakt",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person hält Blickkontakt und lächelt, kann aber keine verbalen Fragen mehr beantworten. Sie reagiert nur noch auf Berührungen.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F6.6.5: Autark = selbständig",
+      "F6.6.5: Überwiegend selbständig = 1",
+      "F6.6.5: Überwiegend unselbständig = 2",
+      "F6.6.5: Reduzierung auf rein basale Interaktion = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  },
+  {
+    "id": "14_gemini_034",
+    "module": "M6",
+    "criterion": "kontaktpflege zu personen außerhalb des direkten umfelds",
+    "scale_type": "selbststaendigkeit",
+    "stem": "Die versicherte Person hat alle Kontakte abgebrochen. Er möchte niemanden sehen und geht auch nicht ans Telefon, selbst wenn er es könnte.",
+    "options": [
+      "selbständig",
+      "überwiegend selbständig",
+      "überwiegend unselbständig",
+      "unselbständig"
+    ],
+    "answer_idx": 3,
+    "rationale_options": [
+      "F6.6.6: Aktiv = selbständig",
+      "F6.6.6: Überwiegend selbständig = 1",
+      "F6.6.6: Überwiegend unselbständig = 2",
+      "F6.6.6: Vollständiger Rückzug, Kontaktpflege nicht mehr möglich/gewollt = unselbständig"
+    ],
+    "rationale_id": 3,
+    "point_scale_options": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "point_scale_id": 3,
+    "point_value": 3,
+    "split": "test",
+    "model": "Gemini",
+    "model_version": "3.0 Flash",
+    "temperature": 0,
+    "_validation": {
+      "status": "validated",
+      "comment": "",
+      "diff": {},
+      "reviewed_at": "2026-06-22T10:45:37.858Z"
+    }
+  }
+]

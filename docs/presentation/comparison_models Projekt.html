@@ -1,0 +1,3722 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analysebericht: to_validate vs validated</title>
+<style>
+:root {
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --panel-2: #f8fafc;
+  --text: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --blue: #2563eb;
+  --blue2: #60a5fa;
+  --violet: #7c3aed;
+  --cyan: #0891b2;
+  --green: #059669;
+  --amber: #f59e0b;
+  --red: #dc2626;
+  --shadow: 0 18px 45px rgba(15, 23, 42, .08);
+}
+* { box-sizing: border-box; }
+body {
+  margin:0; 
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(37,99,235,.14), transparent 32rem),
+    radial-gradient(circle at top right, rgba(124,58,237,.12), transparent 30rem),
+    var(--bg);
+  line-height: 1.45;
+}
+.wrapper { max-width: 1320px; margin: 0 auto; padding: 34px 24px 64px; }
+header {
+  background: linear-gradient(135deg, rgba(15,23,42,.96), rgba(30,41,59,.94));
+  color: #fff;
+  border-radius: 28px;
+  padding: 34px 38px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow:hidden;
+}
+header:after {
+  content:"";
+  position:absolute;
+  right:-80px; top:-80px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: rgba(96,165,250,.22);
+}
+header h1 { margin: 0 0 10px; font-size: clamp(28px, 4vw, 46px); letter-spacing: -.04em; }
+header p { margin: 0; max-width: 920px; color: #cbd5e1; font-size: 16px; }
+.meta {
+  display:flex; flex-wrap:wrap; gap: 10px; margin-top: 22px;
+}
+.pill {
+  display:inline-flex; align-items:center; gap:8px;
+  padding: 8px 12px; border-radius: 999px;
+  background: rgba(255,255,255,.11);
+  color: #e2e8f0; font-size: 13px;
+  border: 1px solid rgba(255,255,255,.14);
+}
+.kpi-grid {
+  display:grid; grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 16px; margin: 22px 0 22px;
+}
+.kpi {
+  background: rgba(255,255,255,.9);
+  border: 1px solid rgba(226,232,240,.85);
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.kpi span { display:block; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+.kpi strong { display:block; font-size: 32px; line-height:1; letter-spacing: -.03em; }
+.kpi small { display:block; margin-top: 10px; color: var(--muted); font-size: 12px; }
+.summary {
+  display:grid; grid-template-columns: 1.1fr .9fr; gap: 18px; margin-bottom: 24px;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+.panel h2, .chart-head h2 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+.panel p, .chart-head p { margin: 7px 0 0; color: var(--muted); font-size: 14px; }
+.panel ul { margin: 14px 0 0; padding-left: 18px; }
+.panel li { margin: 8px 0; }
+.charts-grid {
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 22px;
+}
+.chart-card {
+  background: rgba(255,255,255,.96);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+  min-height: 280px;
+}
+.chart-card.wide { grid-column: 1 / -1; }
+.bar-chart { margin-top: 18px; display:flex; flex-direction:column; gap: 13px; }
+.bar-row {
+  display:grid;
+  grid-template-columns: 185px minmax(120px,1fr) 64px;
+  align-items:center;
+  gap: 12px;
+}
+.bar-label {
+  color:#334155; font-size: 13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.bar-track {
+  height: 18px;
+  background: #eef2ff;
+  border-radius: 999px;
+  overflow:hidden;
+  border:1px solid rgba(99,102,241,.12);
+}
+.bar-fill {
+  height:100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--blue), var(--violet));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+}
+.bar-value { font-variant-numeric: tabular-nums; text-align:right; color:#0f172a; font-weight:700; font-size: 13px; }
+.chart-note { margin-top: 12px; color: var(--muted); font-size:12px; }
+.donut-wrap { display:grid; grid-template-columns: 210px 1fr; align-items:center; gap: 22px; margin-top: 20px; }
+.donut {
+  width: 190px; height: 190px; border-radius: 50%;
+  display:grid; place-items:center; 
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.05);
+}
+.donut-hole {
+  width: 112px; height: 112px; border-radius: 50%;
+  background: white;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
+  box-shadow: 0 8px 20px rgba(15,23,42,.10);
+}
+.donut-hole strong { font-size: 28px; letter-spacing:-.03em; }
+.donut-hole span { color: var(--muted); font-size: 12px; }
+.donut-legend { display:flex; flex-direction:column; gap: 10px; }
+.donut-legend-row {
+  display:grid; grid-template-columns: 14px 1fr auto; align-items:center; gap:10px;
+  font-size: 13px; color: #334155;
+}
+.donut-dot, .legend-dot { width:10px; height:10px; border-radius:999px; display:inline-block; }
+.legend { display:flex; flex-wrap:wrap; gap: 12px; margin-top: 14px; color: #475569; font-size: 13px; }
+.legend-item { display:inline-flex; gap: 6px; align-items:center; }
+.stack { display:flex; background:#eef2ff; }
+.stack .stack-seg { height:100%; }
+.seg-0 { background: var(--blue); }
+.seg-1 { background: var(--violet); }
+.seg-2 { background: var(--cyan); }
+.seg-3 { background: var(--green); }
+.heatmap-scroll { overflow:auto; margin-top: 16px; }
+.heatmap { width: 100%; border-collapse: separate; border-spacing: 8px; }
+.heatmap th { text-align:left; font-size: 13px; color: #475569; padding: 8px; }
+.heatmap td {
+  text-align:center;
+  border-radius: 14px;
+  padding: 18px 12px;
+  min-width: 90px;
+  font-variant-numeric: tabular-nums;
+}
+.section-title { margin: 34px 0 14px; }
+.section-title h2 { margin: 0; font-size: 24px; letter-spacing:-.03em; }
+.section-title p { margin: 6px 0 0; color: var(--muted); }
+.table-wrap {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  overflow:hidden;
+  margin-bottom: 24px;
+}
+.table-scroll { overflow:auto; max-height: 640px; }
+.data-table {
+  width:100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table th {
+  position: sticky; top:0; z-index:1;
+  background: #f8fafc;
+  color:#475569;
+  text-align:left;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space:nowrap;
+}
+.data-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid #eef2f7;
+  vertical-align:top;
+}
+.data-table tr:hover td { background:#f8fafc; }
+.data-table code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #1e293b;
+}
+.num { text-align:right; font-variant-numeric: tabular-nums; }
+.strong { font-weight:800; color: var(--blue); }
+.diff-old { color:#991b1b; max-width: 360px; }
+.diff-new { color:#065f46; max-width: 360px; }
+details summary {
+  cursor: pointer;
+  padding: 18px 22px;
+  font-weight: 800;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--line);
+}
+.footer {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 28px;
+  text-align:center;
+}
+@media (max-width: 980px) {
+  .kpi-grid, .summary, .charts-grid { grid-template-columns: 1fr; }
+  .bar-row { grid-template-columns: 140px minmax(90px,1fr) 54px; }
+  .donut-wrap { grid-template-columns: 1fr; justify-items:center; }
+}
+</style>
+</head>
+<body>
+<div class="wrapper">
+<header>
+  <h1>Analysebericht: Benchmark-Validierung</h1>
+</header>
+
+<div class="kpi-grid">
+<div class="kpi"><span>Dateipaare</span><strong>47</strong><small>übereinstimmend verglichen</small></div><div class="kpi"><span>Datensätze</span><strong>1614</strong><small>verglichene Datensätze</small></div><div class="kpi"><span>Veränderte Datensätze</span><strong>104</strong><small>6.4% aller verglichenen Datensätze</small></div><div class="kpi"><span>Feldänderungen</span><strong>221</strong><small>davon 46 answer_idx-Korrekturen</small></div>
+</div>
+
+<div class="summary">
+  <section class="panel">
+    <h2>Kernaussagen</h2>
+    <p>Die Validierung führt nicht zu Strukturbrüchen, aber zu klar sichtbaren fachlichen und sprachlichen Korrekturen.</p>
+    <ul><li>Die verglichenen Dateien enthalten insgesamt 1614 Datensätze; davon wurden 104 Datensätze inhaltlich verändert (6.4%).</li><li>Der größte Änderungsumfang liegt bei Gemini mit 65 veränderten Datensätzen; die höchste Änderungsquote liegt bei Gemini (12.7%).</li><li>Die häufigsten Änderungen betreffen Falltext (stem) (64 Feldänderungen).</li><li>Modul M4 ist am stärksten betroffen (69 veränderte Datensätze).</li><li>Das auffälligste Dateipaar ist 4_complete-benchmark_gemini_3_26-05-15 (11 veränderte Datensätze).</li></ul>
+  </section>
+  <section class="panel">
+    <h2>Interpretation</h2>
+    <p>Die Änderungen konzentrieren sich besonders auf Falltexte und Bewertungsentscheidungen. Auffällig ist, dass Antwortkorrekturen vor allem bei Gemini auftreten. Dadurch verschiebt sich der Nutzen der Validierung von reiner sprachlicher Glättung hin zu fachlicher Qualitätssicherung.</p>
+    <p style="margin-top:12px;">Alle verglichenen Dateipaare haben dieselbe Datensatzanzahl. Es wurden keine Datensätze durch die Validierung hinzugefügt oder entfernt.</p>
+  </section>
+</div>
+
+
+<div class="charts-grid">
+
+      <section class="chart-card">
+        <div class="chart-head">
+          <h2>Veränderte Datensätze pro Modell</h2>
+          <p>Anzahl der Datensätze mit mindestens einer fachlichen oder textlichen Änderung.</p>
+        </div>
+        <div class="bar-chart">
+          
+          <div class="bar-row">
+            <div class="bar-label" title="ChatGPT">ChatGPT</div>
+            <div class="bar-track"><div class="bar-fill" style="width:23.08%"></div></div>
+            <div class="bar-value">15</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="Claude">Claude</div>
+            <div class="bar-track"><div class="bar-fill" style="width:36.92%"></div></div>
+            <div class="bar-value">24</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="Gemini">Gemini</div>
+            <div class="bar-track"><div class="bar-fill" style="width:100.00%"></div></div>
+            <div class="bar-value">65</div>
+          </div>
+        </div>
+        
+      </section>
+    
+
+      <section class="chart-card">
+        <div class="chart-head">
+          <h2>Änderungsquote pro Modell</h2>
+          <p>Anteil der veränderten Datensätze an allen verglichenen Datensätzen je Modell.</p>
+        </div>
+        <div class="bar-chart">
+          
+          <div class="bar-row">
+            <div class="bar-label" title="ChatGPT">ChatGPT</div>
+            <div class="bar-track"><div class="bar-fill" style="width:21.26%"></div></div>
+            <div class="bar-value">2.7%</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="Claude">Claude</div>
+            <div class="bar-track"><div class="bar-fill" style="width:34.65%"></div></div>
+            <div class="bar-value">4.4%</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="Gemini">Gemini</div>
+            <div class="bar-track"><div class="bar-fill" style="width:100.00%"></div></div>
+            <div class="bar-value">12.7%</div>
+          </div>
+        </div>
+        
+      </section>
+    
+
+      <section class="chart-card">
+        <div class="chart-head"><h2>Feldänderungen nach Feldtyp</h2><p>Welche Felder durch die Validierung angepasst wurden.</p></div>
+        <div class="donut-wrap">
+          <div class="donut" style="background:conic-gradient(#2563eb 0.00% 28.96%, #7c3aed 28.96% 49.77%, #0891b2 49.77% 70.59%, #059669 70.59% 91.40%, #f59e0b 91.40% 99.55%, #dc2626 99.55% 100.00%);">
+            <div class="donut-hole"><strong>221</strong><span>gesamt</span></div>
+          </div>
+          <div class="donut-legend"><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#2563eb"></span>
+          <span>Falltext (stem)</span><strong>64</strong>
+        </div><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#7c3aed"></span>
+          <span>Antwortindex</span><strong>46</strong>
+        </div><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#0891b2"></span>
+          <span>Begründungs-ID</span><strong>46</strong>
+        </div><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#059669"></span>
+          <span>Punkteskala-ID</span><strong>46</strong>
+        </div><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#f59e0b"></span>
+          <span>Punktwert</span><strong>18</strong>
+        </div><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#dc2626"></span>
+          <span>Kriterium</span><strong>1</strong>
+        </div></div>
+        </div>
+      </section>
+    
+
+      <section class="chart-card">
+        <div class="chart-head">
+          <h2>Veränderte Datensätze nach Modul</h2>
+          <p>Modulbezogene Konzentration der Änderungen.</p>
+        </div>
+        <div class="bar-chart">
+          
+          <div class="bar-row">
+            <div class="bar-label" title="M1">M1</div>
+            <div class="bar-track"><div class="bar-fill" style="width:31.88%"></div></div>
+            <div class="bar-value">22</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="M2">M2</div>
+            <div class="bar-track"><div class="bar-fill" style="width:11.59%"></div></div>
+            <div class="bar-value">8</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="M4">M4</div>
+            <div class="bar-track"><div class="bar-fill" style="width:100.00%"></div></div>
+            <div class="bar-value">69</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="M6">M6</div>
+            <div class="bar-track"><div class="bar-fill" style="width:7.25%"></div></div>
+            <div class="bar-value">5</div>
+          </div>
+        </div>
+        
+      </section>
+    
+
+    <section class="chart-card">
+      <div class="chart-head"><h2>Feldänderungen je Modell</h2><p>Stacked View: Antwortkorrekturen, Falltextänderungen und sonstige Felder.</p></div>
+      <div class="legend"><span class="legend-item"><span class="legend-dot seg-0"></span>Antwortindex</span><span class="legend-item"><span class="legend-dot seg-1"></span>Falltext</span><span class="legend-item"><span class="legend-dot seg-2"></span>Sonstige</span></div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-label">ChatGPT</div>
+          <div class="bar-track stack"><div class="stack-seg seg-0" style="width:3.07%" title="Antwortindex: 5"></div><div class="stack-seg seg-1" style="width:6.13%" title="Falltext: 10"></div><div class="stack-seg seg-2" style="width:9.20%" title="Sonstige: 15"></div></div>
+          <div class="bar-value">30</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">Claude</div>
+          <div class="bar-track stack"><div class="stack-seg seg-0" style="width:0.61%" title="Antwortindex: 1"></div><div class="stack-seg seg-1" style="width:14.72%" title="Falltext: 24"></div><div class="stack-seg seg-2" style="width:1.84%" title="Sonstige: 3"></div></div>
+          <div class="bar-value">28</div>
+        </div>
+        
+        <div class="bar-row">
+          <div class="bar-label">Gemini</div>
+          <div class="bar-track stack"><div class="stack-seg seg-0" style="width:24.54%" title="Antwortindex: 40"></div><div class="stack-seg seg-1" style="width:18.40%" title="Falltext: 30"></div><div class="stack-seg seg-2" style="width:57.06%" title="Sonstige: 93"></div></div>
+          <div class="bar-value">163</div>
+        </div>
+        </div>
+    </section>
+    
+
+      <section class="chart-card">
+        <div class="chart-head"><h2>Review-Status der geänderten Datensätze</h2><p>Statuswerte nur für inhaltlich veränderte Datensätze.</p></div>
+        <div class="donut-wrap">
+          <div class="donut" style="background:conic-gradient(#2563eb 0.00% 97.12%, #7c3aed 97.12% 99.04%, #0891b2 99.04% 100.00%);">
+            <div class="donut-hole"><strong>104</strong><span>gesamt</span></div>
+          </div>
+          <div class="donut-legend"><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#2563eb"></span>
+          <span>peer_review</span><strong>101</strong>
+        </div><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#7c3aed"></span>
+          <span>validated</span><strong>2</strong>
+        </div><div class="donut-legend-row">
+          <span class="donut-dot" style="background:#0891b2"></span>
+          <span>rejected</span><strong>1</strong>
+        </div></div>
+        </div>
+      </section>
+    
+
+      <section class="chart-card">
+        <div class="chart-head">
+          <h2>Top-Dateipaare nach Änderungsumfang</h2>
+          <p>Dateipaare mit den meisten veränderten Datensätzen.</p>
+        </div>
+        <div class="bar-chart">
+          
+          <div class="bar-row">
+            <div class="bar-label" title="4 · gemini_3 · 26-05-15">4 · gemini_3 · 26-05-15</div>
+            <div class="bar-track"><div class="bar-fill" style="width:100.00%"></div></div>
+            <div class="bar-value">11</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="1 · claude_sonnet4-6 · 26-05-15">1 · claude_sonnet4-6 · 26-05-15</div>
+            <div class="bar-track"><div class="bar-fill" style="width:81.82%"></div></div>
+            <div class="bar-value">9</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="5 · gemini_3 · 26-05-15">5 · gemini_3 · 26-05-15</div>
+            <div class="bar-track"><div class="bar-fill" style="width:72.73%"></div></div>
+            <div class="bar-value">8</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="8 · gemini_3 · 26-06-14">8 · gemini_3 · 26-06-14</div>
+            <div class="bar-track"><div class="bar-fill" style="width:63.64%"></div></div>
+            <div class="bar-value">7</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="12 · gemini_3 · 26-06-14">12 · gemini_3 · 26-06-14</div>
+            <div class="bar-track"><div class="bar-fill" style="width:54.55%"></div></div>
+            <div class="bar-value">6</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="2 · claude_sonnet4-6 · 26-05-15">2 · claude_sonnet4-6 · 26-05-15</div>
+            <div class="bar-track"><div class="bar-fill" style="width:54.55%"></div></div>
+            <div class="bar-value">6</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="16 · gemini_3 · 26-06-14">16 · gemini_3 · 26-06-14</div>
+            <div class="bar-track"><div class="bar-fill" style="width:45.45%"></div></div>
+            <div class="bar-value">5</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="7 · gemini_3 · 26-06-14">7 · gemini_3 · 26-06-14</div>
+            <div class="bar-track"><div class="bar-fill" style="width:45.45%"></div></div>
+            <div class="bar-value">5</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="1 · gemini_3 · 26-05-15">1 · gemini_3 · 26-05-15</div>
+            <div class="bar-track"><div class="bar-fill" style="width:45.45%"></div></div>
+            <div class="bar-value">5</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="2 · gemini_3 · 26-05-15">2 · gemini_3 · 26-05-15</div>
+            <div class="bar-track"><div class="bar-fill" style="width:36.36%"></div></div>
+            <div class="bar-value">4</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="3 · chatgpt_5-5 · 26-05-15">3 · chatgpt_5-5 · 26-05-15</div>
+            <div class="bar-track"><div class="bar-fill" style="width:36.36%"></div></div>
+            <div class="bar-value">4</div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-label" title="13 · gemini_3 · 26-06-14">13 · gemini_3 · 26-06-14</div>
+            <div class="bar-track"><div class="bar-fill" style="width:27.27%"></div></div>
+            <div class="bar-value">3</div>
+          </div>
+        </div>
+        
+      </section>
+    
+
+    <section class="chart-card wide">
+      <div class="chart-head"><h2>Heatmap: Modell × Modul</h2><p>Anzahl veränderter Datensätze pro Modell und Modul.</p></div>
+      <div class="heatmap-scroll">
+      <table class="heatmap">
+        <thead><tr><th>Modell</th><th>M1</th><th>M2</th><th>M4</th><th>M6</th></tr></thead>
+        <tbody><tr><th>ChatGPT</th><td style="background:rgba(37, 99, 235, 0.176); color:#0f172a;"><strong>6</strong></td><td style="background:rgba(148,163,184,.10); color:#0f172a;"><strong>0</strong></td><td style="background:rgba(37, 99, 235, 0.224); color:#0f172a;"><strong>9</strong></td><td style="background:rgba(148,163,184,.10); color:#0f172a;"><strong>0</strong></td></tr><tr><th>Claude</th><td style="background:rgba(37, 99, 235, 0.160); color:#0f172a;"><strong>5</strong></td><td style="background:rgba(37, 99, 235, 0.112); color:#0f172a;"><strong>2</strong></td><td style="background:rgba(37, 99, 235, 0.320); color:#0f172a;"><strong>15</strong></td><td style="background:rgba(37, 99, 235, 0.112); color:#0f172a;"><strong>2</strong></td></tr><tr><th>Gemini</th><td style="background:rgba(37, 99, 235, 0.256); color:#0f172a;"><strong>11</strong></td><td style="background:rgba(37, 99, 235, 0.176); color:#0f172a;"><strong>6</strong></td><td style="background:rgba(37, 99, 235, 0.800); color:#ffffff;"><strong>45</strong></td><td style="background:rgba(37, 99, 235, 0.128); color:#0f172a;"><strong>3</strong></td></tr></tbody>
+      </table>
+      </div>
+    </section>
+    
+</div>
+
+
+<div class="section-title">
+  <h2>Vergleich je Dateipaar</h2>
+  <p>Übersicht über alle berücksichtigten Dateipaare.</p>
+</div>
+<div class="table-wrap"><div class="table-scroll"><table class="data-table">
+      <thead><tr><th>Modell</th><th>Dateipaar</th><th>Datensätze</th><th>verändert</th><th>Quote</th><th>Feldänderungen</th><th>answer_idx</th><th>stem</th></tr></thead>
+      <tbody><tr>
+          <td>ChatGPT</td>
+          <td><code>10_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">4</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>11_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>12_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>13_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>14_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>15_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">4</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>16_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>1_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+          <td class="num">35</td>
+          <td class="num strong">2</td>
+          <td class="num">5.7%</td>
+          <td class="num">2</td>
+          <td class="num">0</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>2_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+          <td class="num">35</td>
+          <td class="num strong">2</td>
+          <td class="num">5.7%</td>
+          <td class="num">5</td>
+          <td class="num">1</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+          <td class="num">35</td>
+          <td class="num strong">4</td>
+          <td class="num">11.4%</td>
+          <td class="num">7</td>
+          <td class="num">1</td>
+          <td class="num">3</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>4_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+          <td class="num">35</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>5_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+          <td class="num">35</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>6_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">2</td>
+          <td class="num">5.7%</td>
+          <td class="num">5</td>
+          <td class="num">1</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>7_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>8_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>ChatGPT</td>
+          <td><code>9_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+          <td class="num">35</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>10_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>11_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">2</td>
+          <td class="num">5.9%</td>
+          <td class="num">2</td>
+          <td class="num">0</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>12_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>13_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>14_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>15_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>16_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">9</td>
+          <td class="num">26.5%</td>
+          <td class="num">9</td>
+          <td class="num">0</td>
+          <td class="num">9</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">6</td>
+          <td class="num">17.6%</td>
+          <td class="num">10</td>
+          <td class="num">1</td>
+          <td class="num">6</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>3_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>4_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>5_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">2</td>
+          <td class="num">5.9%</td>
+          <td class="num">2</td>
+          <td class="num">0</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>6_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>7_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">2</td>
+          <td class="num">5.9%</td>
+          <td class="num">2</td>
+          <td class="num">0</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>8_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">1</td>
+          <td class="num">2.9%</td>
+          <td class="num">1</td>
+          <td class="num">0</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>Claude</td>
+          <td><code>9_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>10_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>11_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">2</td>
+          <td class="num">5.9%</td>
+          <td class="num">4</td>
+          <td class="num">1</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">6</td>
+          <td class="num">17.6%</td>
+          <td class="num">17</td>
+          <td class="num">5</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">3</td>
+          <td class="num">8.8%</td>
+          <td class="num">8</td>
+          <td class="num">2</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>14_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">3</td>
+          <td class="num">8.8%</td>
+          <td class="num">5</td>
+          <td class="num">1</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">5</td>
+          <td class="num">14.7%</td>
+          <td class="num">15</td>
+          <td class="num">5</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">5</td>
+          <td class="num">14.7%</td>
+          <td class="num">8</td>
+          <td class="num">1</td>
+          <td class="num">4</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">4</td>
+          <td class="num">11.8%</td>
+          <td class="num">7</td>
+          <td class="num">1</td>
+          <td class="num">3</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">3</td>
+          <td class="num">8.8%</td>
+          <td class="num">6</td>
+          <td class="num">1</td>
+          <td class="num">2</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">11</td>
+          <td class="num">32.4%</td>
+          <td class="num">21</td>
+          <td class="num">3</td>
+          <td class="num">8</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+          <td class="num">34</td>
+          <td class="num strong">8</td>
+          <td class="num">23.5%</td>
+          <td class="num">28</td>
+          <td class="num">6</td>
+          <td class="num">4</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>6_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">0</td>
+          <td class="num">0.0%</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">5</td>
+          <td class="num">14.7%</td>
+          <td class="num">15</td>
+          <td class="num">5</td>
+          <td class="num">0</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">7</td>
+          <td class="num">20.6%</td>
+          <td class="num">22</td>
+          <td class="num">7</td>
+          <td class="num">1</td>
+        </tr><tr>
+          <td>Gemini</td>
+          <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+          <td class="num">34</td>
+          <td class="num strong">3</td>
+          <td class="num">8.8%</td>
+          <td class="num">7</td>
+          <td class="num">2</td>
+          <td class="num">1</td>
+        </tr></tbody>
+    </table></div></div>
+
+<div class="section-title">
+  <h2>Kritische Änderungen: answer_idx</h2>
+  <p>Diese Änderungen verändern die fachliche Zielantwort. Punktwerte werden zusätzlich angezeigt.</p>
+</div>
+<div class="table-wrap"><div class="table-scroll"><table class="data-table">
+  <thead><tr><th>Modell</th><th>Dateipaar</th><th>Zeile</th><th>Modul</th><th>Kriterium</th><th>answer alt</th><th>answer neu</th><th>Punkt alt</th><th>Punkt neu</th><th>Status</th><th>Kommentar</th></tr></thead>
+  <tbody><tr>
+      <td>ChatGPT</td>
+      <td><code>10_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Es wird eine barrierefreier Gehweg vorausgesetzt</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>11_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Motivation zum Gehen, wird in Modul 1 nicht berücksichtigt, es geht um die körperliche Fähigkeit.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">23</td>
+      <td>M4</td>
+      <td>mundgerechtes zubereiten der speisen und getränke</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td class="num">2</td>
+      <td class="num strong">0</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td>Plattenwechsel wird in Modul 5 berücksichtigt.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td class="num">2</td>
+      <td class="num strong">3</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>14_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>15_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Laut Richtlinien, wird eine barriefreie Umgebung vorausgesetzt.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Die Handhabung der Bettdecke ist nicht zu berücksichtigen.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Die Bettkante ist kein Sitzmöbel, deswegen ich bei vorhandener Lehne von Selbständigkeit auszugehen.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Es geht um die physische Fähigkeit, bei barrierefreien Untergrund.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">5</td>
+      <td>M1</td>
+      <td>treppensteigen</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Auswahl der Kleidung, wird hier nicht berücksichtigt.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td class="num">0</td>
+      <td class="num strong">1</td>
+      <td class="num">0</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>2_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Bewertet wird hier die Fähigkeit, sich auf einer durchschnittlichen Gehstrecke von mindestens acht Metern zwischen zwei…</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten_einer_stabilen_sitzposition</td>
+      <td class="num">1</td>
+      <td class="num strong">2</td>
+      <td class="num">1</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">4</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Bewertet wird hier die Fähigkeit, sich auf einer durchschnittlichen Gehstrecke von mindestens acht Metern zwischen zwei…</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td class="num">3</td>
+      <td class="num strong">2</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">34</td>
+      <td>M6</td>
+      <td>kontaktpflege zu personen außerhalb des direkten umfelds</td>
+      <td class="num">3</td>
+      <td class="num strong">2</td>
+      <td class="num">3</td>
+      <td class="num">2</td>
+      <td>validated</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Das Heben der Beine an die Bettkante wird in diesem Kriterium nicht bewertet, sondern in 4.6.2. </td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">8</td>
+      <td>M2</td>
+      <td>zeitliche orientierung</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Die Handhabung eines Hörgerätes wird in 4.5.7 berücksichtigt und nicht hier.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>berücksichtigt wird nur Hilfe bei einem eingegossenen Getränk</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td class="num">1</td>
+      <td class="num strong">2</td>
+      <td class="num">1</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Der Wechsel oder die Vorbereitung der Basisplatte wird in 4.5.9 berücksichtigt</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>6_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">0</td>
+      <td>peer_review</td>
+      <td>Barrierefreiheit wird vorausgesetzt</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Bettkante ist kein Sitzmöbel, somit ist bei vorhandenen Lehnen eine Selbständigkeit anzunehmen</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Reinigung von Hörgeräten wird in 4.5.7. berücksichtigt und nicht hier.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Kompressionstrümpfe werden in 4.5.7. berücksichtigt und nicht hier</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Einschenken wird bei mundgerechter Vorbereitung berücksichtigt</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Das Ausschneiden der Basisiplatte wird in Modul 5 bei der Wundersorgung berücksichtigt.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">13</td>
+      <td>M2</td>
+      <td>erkennen von risiken und gefahren</td>
+      <td class="num">1</td>
+      <td class="num strong">0</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td>Das Vergessen des Topfes ist für 4.2.4 relevant: Kurzzeitgedächtnis. Die Gefahr wird ja erkannt.</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">4</td>
+      <td class="num">4</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td class="num">2</td>
+      <td class="num strong">0</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td>Basisplatte ist in Modul 5 Versorgung Stoma</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">29</td>
+      <td>M6</td>
+      <td>gestaltung des tagesablaufs und anpassung an veränderungen</td>
+      <td class="num">1</td>
+      <td class="num strong">2</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">30</td>
+      <td>M6</td>
+      <td>ruhen und schlafen</td>
+      <td class="num">1</td>
+      <td class="num strong">2</td>
+      <td class="num">1</td>
+      <td class="num">1</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">4</td>
+      <td class="num">4</td>
+      <td>validated</td>
+      <td></td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td class="num">2</td>
+      <td class="num strong">1</td>
+      <td class="num">2</td>
+      <td class="num">2</td>
+      <td>peer_review</td>
+      <td></td>
+    </tr></tbody>
+</table></div></div>
+
+<div class="section-title">
+  <h2>Alle inhaltlichen Feldänderungen</h2>
+  <p>Vollständige Liste aller erkannten Änderungen nach Entfernung von <code>id</code> und <code>_validation</code>.</p>
+</div>
+<div class="table-wrap">
+  <details open>
+    <summary>221 Feldänderungen anzeigen</summary>
+    <div class="table-scroll"><table class="data-table compact">
+  <thead><tr><th>Modell</th><th>Dateipaar</th><th>Zeile</th><th>Modul</th><th>Kriterium</th><th>Feld</th><th>vorher</th><th>nachher</th><th>Status</th></tr></thead>
+  <tbody><tr>
+      <td>ChatGPT</td>
+      <td><code>10_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>10_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>10_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>10_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>13_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">29</td>
+      <td>M4</td>
+      <td>ernaehrung_parenteral_oder_ueber_sonde</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erhält in der Alltagssituation keine künstliche Ernährung oder führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td class="diff-new">Die versicherte Person führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>14_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">29</td>
+      <td>M4</td>
+      <td>ernaehrung_parenteral_oder_ueber_sonde</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erhält in der Alltagssituation keine künstliche Ernährung oder führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td class="diff-new">Die versicherte Person führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>15_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>15_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>15_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>15_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>1_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">23</td>
+      <td>M4</td>
+      <td>mundgerechtes_zubereiten_der_nahrung_und_eingiessen_von_getraenken</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann im üblichen Tagesablauf einzelne Speisen halten, Nahrung und Getränke müssen aber überwiegend mundgerecht vorbereitet werden.</td>
+      <td class="diff-new">Die versicherte Person kann im üblichen Tagesablauf einzelne Speisen vorbereiten, wie zum Beispiel belegte Brotscheiben schneiden, sie kann aber keine mundgerechten Stücke vorbereiten, Nahrung und Getränke müssen aber ü…</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>1_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">29</td>
+      <td>M4</td>
+      <td>ernaehrung_parenteral_oder_ueber_sonde</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erhält im üblichen Tagesablauf keine künstliche Ernährung oder führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td class="diff-new">Die versicherte Person führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>2_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>2_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>2_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>2_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>2_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">29</td>
+      <td>M4</td>
+      <td>ernaehrung_parenteral_oder_ueber_sonde</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erhält im üblichen Tagesablauf keine künstliche Ernährung oder führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td class="diff-new">Die versicherte Person führt eine tägliche künstliche Ernährung ohne personelle Hilfe durch. Sie benötigt nur Hilfe beim Verabreichen der Medikamente.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">5</td>
+      <td>M1</td>
+      <td>treppensteigen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann morgens eine Treppe alleine steigen, benötigt aber Begleitung wegen Sturzrisiko.</td>
+      <td class="diff-new">Die versicherte Person kann morgens eine Treppe alleine steigen, benötigt aber Begleitung in Form von Beaufsichtigung wegen Sturzrisiko.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">23</td>
+      <td>M4</td>
+      <td>mundgerechtes_zubereiten_der_nahrung_und_eingiessen_von_getraenken</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann morgens einzelne Speisen halten, Nahrung und Getränke müssen aber überwiegend mundgerecht vorbereitet werden.</td>
+      <td class="diff-new">Die versicherte Person kann morgens einzelne Speisen und Hnadlungen, wie Brot schneiden durcführen, Nahrung und Getränke müssen aber überwiegend mundgerecht vorbereitet werden.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>3_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">29</td>
+      <td>M4</td>
+      <td>ernaehrung_parenteral_oder_ueber_sonde</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erhält morgens keine künstliche Ernährung oder führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td class="diff-new">Die versicherte Person führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>4_complete-benchmark_chatgpt_5-5_26-05-15</code></td>
+      <td class="num">29</td>
+      <td>M4</td>
+      <td>ernaehrung_parenteral_oder_ueber_sonde</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erhält am Nachmittag keine künstliche Ernährung oder führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td class="diff-new">Die versicherte Person führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>6_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>6_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>6_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>6_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>ChatGPT</td>
+      <td><code>6_complete-benchmark_chatgpt_5-5_26-06-14</code></td>
+      <td class="num">29</td>
+      <td>M4</td>
+      <td>ernaehrung_parenteral_oder_ueber_sonde</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erhält im Alltag keine künstliche Ernährung oder führt eine nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td class="diff-new">Die versicherte Person erhält im Alltag künstliche Ernährung und führt diese nicht tägliche künstliche Ernährung ohne personelle Hilfe durch.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>11_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten_einer_stabilen_sitzposition</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person hat eine so stark eingeschränkte Rumpfkontrolle, dass sie selbst mit Stützkissen keine aufrechte Sitzposition einnehmen kann; die Pflegekraft muss sie aktiv stützen.</td>
+      <td class="diff-new">Die versicherte Person hat eine so stark eingeschränkte Rumpfkontrolle, dass sie selbst mit Stützkissen keine aufrechte Sitzposition einnehmen kann; die Pflegekraft muss sie auch während des Waschvorgangs ständig aktiv …</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>11_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+      <td class="num">9</td>
+      <td>M2</td>
+      <td>erinnern_an_wesentliche_ereignisse_oder_beobachtungen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann sich an das gestrige Mittagessen nicht erinnern, weiß aber noch, wo sie früher gearbeitet hat und in welcher Stadt sie aufgewachsen ist.</td>
+      <td class="diff-new">Die versicherte Person kann sich an das gestrige Mittagessen nicht erinnern, weiß aber meist noch, wo sie früher gearbeitet hat und in welcher Stadt sie aufgewachsen ist.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>12_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>essen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann aufgrund einer Schluckstörung nicht oral essen; die Beurteilung ergibt vollständige Unselbständigkeit.</td>
+      <td class="diff-new">Die versicherte Person kann aufgrund einer Schluckstörung nicht oral essen</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung_innerhalb_des_wohnbereichs</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann die meisten Strecken im Wohnbereich selbständig zurücklegen, braucht aber bei einzelnen Abschnitten gelegentliche Unterstützung.</td>
+      <td class="diff-new">Die versicherte Person kann die meisten Strecken im Wohnbereich selbständig zurücklegen, braucht aber je nach Tagesform gelegentlich Unterstützung in Form von Beaufsichtigung.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>koerperpflege_im_bereich_des_kopfes</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person führt alle Körperpflegemaßnahmen im Bereich des Kopfes – Kämmen, Zahnpflege, Rasur – vollständig selbständig durch.</td>
+      <td class="diff-new">Die versicherte Person führt alle Körperpflegemaßnahmen im Bereich des Kopfes – Kämmen, Zahnpflege, Rasur – alleine durch.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">19</td>
+      <td>M4</td>
+      <td>waschen_des_intimbereichs</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person reinigt den Intimbereich komplett selbständig und trocknet ihn danach ab.</td>
+      <td class="diff-new">Die versicherte Person reinigt den Intimbereich komplett ohne Hilfe und trocknet ihn danach ab.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">24</td>
+      <td>M4</td>
+      <td>essen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person führt Speisen selbständig zum Mund, kaut und schluckt ohne personelle Unterstützung.</td>
+      <td class="diff-new">Die versicherte Person führt Speisen ohne Einschränkungen in der Bewegung zum Mund, kaut und schluckt ohne personelle Unterstützung.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person nimmt Flüssigkeiten selbständig auf; personelle Hilfe ist nicht erforderlich.</td>
+      <td class="diff-new">Die versicherte Person trinkt ausreichend; personelle Hilfe ist nicht erforderlich.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewaeltigen_der_folgen_einer_harninkontinenz_und_umgang_mit_dauerkatheter_und_urostoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wechselt Inkontinenzmaterial nach Bedarf selbständig und sachgerecht.</td>
+      <td class="diff-new">Die versicherte Person wechselt Inkontinenzmaterial nach Bedarf alleine und sachgerecht.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewaeltigen_der_folgen_einer_stuhlinkontinenz_und_umgang_mit_stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wechselt Inkontinenzvorlagen bei Stuhlinkontinenz oder den Stomabeutel vollständig selbständig.</td>
+      <td class="diff-new">Die versicherte Person wechselt Inkontinenzvorlagen bei Stuhlinkontinenz oder den Stomabeutel vollständig alleine.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">29</td>
+      <td>M6</td>
+      <td>gestaltung_des_tagesablaufs_und_anpassung_an_veraenderungen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person plant und strukturiert ihren Alltag vollständig eigenständig und passt den Plan auch bei unerwarteten Veränderungen selbständig an.</td>
+      <td class="diff-new">Die versicherte Person plant und strukturiert ihren Alltag vollständig eigenständig und passt den Plan auch bei unerwarteten Veränderungen ihren Bedürfnissen entsprechend an.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>1_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">32</td>
+      <td>M6</td>
+      <td>vornehmen_von_in_die_zukunft_gerichteten_planungen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person hat Vorstellungen und Wünsche zu anstehenden Festen und plant diese Ereignisse selbständig.</td>
+      <td class="diff-new">Die versicherte Person hat Vorstellungen und Wünsche zu anstehenden Festen und plant diese Ereignisse alleine.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten_einer_stabilen_sitzposition</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten_einer_stabilen_sitzposition</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten_einer_stabilen_sitzposition</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten_einer_stabilen_sitzposition</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten_einer_stabilen_sitzposition</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann sich auf einem Stuhl kurzfristig aufrecht halten, benötigt jedoch nach einigen Minuten personelle Unterstützung zur Positionskorrektur.</td>
+      <td class="diff-new">Die versicherte Person kann sich auf einem Stuhl kurzfristig aufrecht halten, benötigt jedoch nach wenigen Minuten personelle Unterstützung zur Positionskorrektur.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">19</td>
+      <td>M4</td>
+      <td>waschen_des_intimbereichs</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wäscht den Intimbereich selbständig, wenn Seife und Waschlappen bereitgelegt werden.</td>
+      <td class="diff-new">Die versicherte Person wäscht den Intimbereich selbständig, wenn Seife und Waschlappen bereitgelegt und angereicht werden.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">24</td>
+      <td>M4</td>
+      <td>essen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person isst überwiegend selbständig, benötigt aber punktuelle Anleitungen oder Hilfen beim Essen.</td>
+      <td class="diff-new">Die versicherte Person isst meistens alleine, benötigt aber punktuelle Anleitungen oder Hilfen beim Essen.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person trinkt selbständig, wenn die Tasse direkt vor ihr positioniert wird.</td>
+      <td class="diff-new">Die versicherte Person trinkt ohne fremde Hilfe, wenn die Tasse direkt vor ihr positioniert wird.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewaeltigen_der_folgen_einer_harninkontinenz_und_umgang_mit_dauerkatheter_und_urostoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person entleert den Urinbeutel des Dauerkatheters selbständig, wenn die Pflegekraft das Material bereitstellt.</td>
+      <td class="diff-new">Die versicherte Person entleert den Urinbeutel des Dauerkatheters ohne fremde Hilfe, wenn die Pflegekraft das Material bereitstellt und anreicht.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>2_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewaeltigen_der_folgen_einer_stuhlinkontinenz_und_umgang_mit_stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wendet Analtampons sachgerecht an und wechselt Inkontinenzmaterial selbständig.</td>
+      <td class="diff-new">Die versicherte Person wendet Analtampons sachgerecht an und wechselt Inkontinenzmaterial ohne dass jemand dabei sin muss.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>3_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewaeltigen_der_folgen_einer_stuhlinkontinenz_und_umgang_mit_stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wechselt Inkontinenzmaterial überwiegend selbständig, benötigt aber Erinnerung oder Bereitstellungshilfe.</td>
+      <td class="diff-new">Die versicherte Person wechselt Inkontinenzmaterial wenn man sie erinnert und ihr die Utensilien bereitstellt und anreicht.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>5_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel_im_bett</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person dreht sich im Bett selbständig mithilfe eines an der Decke befestigten Haltering, ohne dass jemand helfen muss.</td>
+      <td class="diff-new">Die versicherte Person dreht sich im Bett alleine mithilfe eines an der Decke befestigten Haltering, ohne dass jemand helfen muss.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>5_complete-benchmark_claude_sonnet4-6_26-05-15</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung_innerhalb_des_wohnbereichs</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person schafft die meisten Wege im Wohnbereich allein; bei einzelnen Strecken ist punktuelles Stützen durch die Pflegekraft erforderlich.</td>
+      <td class="diff-new">Die versicherte Person schafft die meisten Wege im Wohnbereich allein; je nach Tagesform ist punktuelles Stützen durch die Pflegekraft erforderlich.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>7_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person trinkt selbständig, wenn das Glas unmittelbar in ihren Aktionsradius gestellt wird.</td>
+      <td class="diff-new">Die versicherte Person trinkt selbständig, wenn das Glas unmittelbar in ihren Aktionsradius gestellt und sie aufgefordert wird.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>7_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>benutzen_einer_toilette_oder_eines_toilettenstuhls</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erledigt den Toilettengang weitgehend selbständig, benötigt aber Orientierungshinweise auf dem Weg zur Toilette.</td>
+      <td class="diff-new">Die versicherte Person erledigt den Toilettengang weitgehend selbständig, benötigt aber Beaufsichtigung auf dem Weg zur Toilette, wegen Sturzgefahr.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Claude</td>
+      <td><code>8_complete-benchmark_claude_sonnet4-6_26-06-14</code></td>
+      <td class="num">9</td>
+      <td>M2</td>
+      <td>erinnern_an_wesentliche_ereignisse_oder_beobachtungen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person vergisst kurz zurückliegende Ereignisse häufig – was sie zum Frühstück gegessen hat, ist ihr mittags nicht mehr bekannt; wichtige Lebensereignisse sind aber noch präsent.</td>
+      <td class="diff-new">Die versicherte Person vergisst kurz zurückliegende Ereignisse häufig – was sie zum Frühstück gegessen hat, ist ihr mittags nicht mehr bekannt; wichtige Lebensereignisse sind aber oft noch präsent.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>11_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>11_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>11_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>11_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wechselt ihre Einlagen selbst, vergisst aber oft, diese danach im Müll zu entsorgen, weshalb die Pflegekraft dies übernehmen muss.</td>
+      <td class="diff-new">Die versicherte Person wechselt ihre Einlagen selbst, vergisst aber oft, diese danach im Mülleimer abzuwerfen, weshalb die Pflegekraft dies übernehmen muss.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">23</td>
+      <td>M4</td>
+      <td>mundgerechtes zubereiten der speisen und getränke</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">23</td>
+      <td>M4</td>
+      <td>mundgerechtes zubereiten der speisen und getränke</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">23</td>
+      <td>M4</td>
+      <td>mundgerechtes zubereiten der speisen und getränke</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann die Toilette erreichen und sich setzen, benötigt aber beim Aufstehen physische Unterstützung und Hilfe bei der Reinigung.</td>
+      <td class="diff-new">Die versicherte Person kann die Toilette erreichen und sich setzen, benötigt aber beim Aufstehen physische Unterstützung, Hilfe bei der Reinigung und beim Richten der Kleidung .</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>12_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person hat ein Ileostoma. Sie kann den Beutel selbständig leeren, die Reinigung der Haut und den Wechsel der Platte übernimmt der Pflegedienst.</td>
+      <td class="diff-new">Die versicherte Person hat ein Ileostoma. Sie kann den Beutel selbständig leeren, die Reinigung der Haut und den Wechsel der Platte bei einem zweiteiligen System übernimmt der Pflegedienst.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann auf einem Stuhl sitzen, sackt jedoch nach wenigen Minuten in sich zusammen. Eine Hilfsperson muss sie durchgehend aufrecht halten.</td>
+      <td class="diff-new">Die versicherte Person kann auf einem Stuhl sitzen, sackt jedoch nach wenigen Minuten in sich zusammen. Eine Hilfsperson muss sie regelmäßig aufrecht halten.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">3</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">3</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">3</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>13_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person merkt, wenn sie Stuhlgang hatte, kann sich aber aufgrund motorischer Defizite nicht selbst säubern. Die Reinigung übernimmt der Partner.</td>
+      <td class="diff-new">Die versicherte Person merkt, wenn sie Stuhlgang hatte, kann sich aber aufgrund motorischer Defizite nicht selbst säubern. Die Reinigung und Einlagenwechsel übernimmt der Partner komplett.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>14_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">3</td>
+      <td>M1</td>
+      <td>umsetzen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann sich nicht mehr eigenständig umsetzen. Eine Hilfsperson muss die Beine und den Oberkörper vollständig führen und das Gewicht tragen.</td>
+      <td class="diff-new">Die versicherte Person kann sich nicht mehr eigenständig umsetzen. Eine Hilfsperson muss die Beine und den Oberkörper vollständig führen und teilweise das Gewicht tragen.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>14_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>14_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>14_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>14_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person hat einen suprapubischen Dauerkatheter; die Einstichstelle muss von einer Pflegefachkraft gereinigt und verbunden werden.</td>
+      <td class="diff-new">Die versicherte Person hat einen suprapubischen Dauerkatheter, die Handhabung bzw. die Entleerung des Beutels muss von einer Pflegeperson übernommen werden.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">4</td>
+      <td>M1</td>
+      <td>fortbewegung innerhalb des wohnbereichs</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">5</td>
+      <td>M1</td>
+      <td>treppensteigen</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">5</td>
+      <td>M1</td>
+      <td>treppensteigen</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">5</td>
+      <td>M1</td>
+      <td>treppensteigen</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>16_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">10</td>
+      <td>M2</td>
+      <td>steuern von mehrschrittigen alltagshandlungen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann die Fernbedienung des Fernsehers nach einer kurzen Erklärung wieder fehlerfrei bedienen.</td>
+      <td class="diff-new">Die versicherte Person kann die Fernbedienung des Fernsehers nach einer kurzen Erklärung fehlerfrei bedienen.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">0</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">0</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Punktwert</td>
+      <td class="diff-old">0</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">0</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann sich mit einer Anziehhilfe (Haken) die Jacke selbständig überziehen.</td>
+      <td class="diff-new">Die versicherte Person kann sich mit einer Anziehhilfe (Haken) die Jacke alleine überziehen.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person trinkt selbständig aus bereitgestellten Flaschen mit Sportverschluss.</td>
+      <td class="diff-new">Die versicherte Person trinkt ohne Hilfe aus bereitgestellten Flaschen mit Sportverschluss.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>1_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person ist gelegentlich stuhlinkontinent; sie kann sich in solchen Fällen selbständig waschen und die Wäsche wechseln.</td>
+      <td class="diff-new">Die versicherte Person ist gelegentlich stuhlinkontinent; sie kann sich in solchen Fällen ohne Hilfe waschen und die Wäsche wechseln.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person sitzt in der Wanne und wäscht sich Oberkörper und Arme. Haare, Beine und Rücken müssen durch die Pflegekraft gewaschen werden.</td>
+      <td class="diff-new">Die versicherte Person sitzt in der Wanne und wäscht sich Oberkörper und Arme. Haare, Beine und Rücken müssen durch die Pflegekraft gewaschen werden. Zudem benötigt sie Hilfe beim Ein- und Aussteigen und man muss sie na…</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann die Hose nicht über das Gesäß ziehen; dies muss die Pflegekraft im Stehen übernehmen.</td>
+      <td class="diff-new">Die versicherte Person kann die Hose noch über das Gesäß ziehen; dies muss die Pflegekraft im Stehen übernehmen. Ansonsten muss beim Kleiden jede Handlung von der Pflegeperson übernommen werden.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Punktwert</td>
+      <td class="diff-old">4</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>2_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person trägt Urinalkondome. Er kann diese nicht selbst anlegen, leert aber den Beinbeutel tagsüber bei Bedarf selbständig aus.</td>
+      <td class="diff-new">Die versicherte Person trägt Urinalkondome. Er kann diese nicht selbst anlegen, beim  leeren des Beinbeutel tagsüber kann die Person aber noch mithelfen, indem sie den Beutel hält.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Punktwert</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person zieht sich Unterhose und Socken an; die Kompressionsstrümpfe und die feste Hose muss die Pflegekraft anziehen.</td>
+      <td class="diff-new">Die versicherte Person hilft beim anziehen der Unterhose und Socken mit; die Hose muss die Pflegekraft komplett anziehen.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>3_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person benötigt Hilfe beim Aufstehen von der Toilette sowie beim anschließenden Säubern des Gesäßes.</td>
+      <td class="diff-new">Die versicherte Person benötigt Hilfe, beim Gehen zur Toilette, beim Aufstehen von der Toilette sowie beim anschließenden Säubern des Gesäßes.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">8</td>
+      <td>M2</td>
+      <td>treffen von entscheidungen im alltagsleben</td>
+      <td>Kriterium</td>
+      <td class="diff-old">zeitliche orientierung</td>
+      <td class="diff-new">treffen von entscheidungen im alltagsleben</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">9</td>
+      <td>M2</td>
+      <td>erinnern an wesentliche ereignisse oder beobachtungen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person weiß nicht mehr, dass sie vor 10 Minuten bereits ein Glas Wasser getrunken hat, und verlangt erneut nach etwas zu trinken.</td>
+      <td class="diff-new">Die versicherte Person weiß nicht mehr, dass sie vor 10 Minuten bereits ein Glas Wasser getrunken hat, und verlangt erneut nach etwas zu trinken. An wichtige Ereignisse aus ihrem kann sie sich nicht mehr erinnern. </td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">13</td>
+      <td>M2</td>
+      <td>erkennen von risiken und gefahren</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person erkennt Gefahren im Straßenverkehr nicht mehr und läuft bei Rot über die Ampel, ohne auf die herannahenden Autos zu achten.</td>
+      <td class="diff-new">Die versicherte Person erkennt Gefahren im Straßenverkehr nicht mehr und läuft bei Rot über die Ampel, ohne auf die herannahenden Autos zu achten. Auch in ihrer Wohnung muss ständig eine Pflegeperson anwesend sein, da e…</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">19</td>
+      <td>M4</td>
+      <td>waschen des intimbereichs</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Aufgrund einer Parkinson-Erkrankung ist Die versicherte Person zu zittrig für die Reinigung; die Pflegekraft übernimmt den Vorgang vollständig.</td>
+      <td class="diff-new">Aufgrund einer Parkinson-Erkrankung ist Die versicherte Person zu zittrig für die Reinigung des Intimbereichs; die Pflegekraft übernimmt den Vorgang vollständig.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Punktwert</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">20</td>
+      <td>M4</td>
+      <td>duschen und baden einschließlich der haarpflege</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann aufgrund massiver Schwindelanfälle die Dusche nicht mehr betreten; die Körperpflege erfolgt komplett am Waschbecken durch die Pflegekraft.</td>
+      <td class="diff-new">Die versicherte Person kann aufgrund massiver Schwindelanfälle die Dusche nicht mehr betreten; die Körperpflege erfolgt komplett am Waschbecken durch die Pflegekraft. Hier kann sie noch bei einfachen Handlungen mithelfe…</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Punktwert</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann im Bett liegend die Hose bis zu den Knien ziehen, danach muss die Pflegekraft die weitere Durchführung vollständig übernehmen.</td>
+      <td class="diff-new">Die versicherte Person kann im Bett liegend etwas mithelfen die Hose nach oben zu ziehen, sonst muss die Pflegekraft die weitere Durchführung vollständig übernehmen.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">24</td>
+      <td>M4</td>
+      <td>essen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wird komplett von der Pflegekraft mit dem Löffel gefüttert und schluckt die Nahrung passiv.</td>
+      <td class="diff-new">Die versicherte Person wird komplett von der Pflegekraft mit dem Löffel gefüttert und schluckt die Nahrung nur nach eindringlicher Aufforderung.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person ist nachts inkontinent, merkt dies aber nicht. Am Morgen muss das gesamte Bett sowie Die versicherte Person durch die Pflegekraft gereinigt werden.</td>
+      <td class="diff-new">Die versicherte Person ist nachts inkontinent, merkt dies aber nicht. Am Morgen muss das gesamte Bett sowie Die versicherte Person durch die Pflegekraft gereinigt und das Inkontinenzmaterial gewechselt werden.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person ist stuhlinkontinent; die Pflegekraft muss sie nach jedem Vorfall im Intimbereich waschen und die Kleidung komplett wechseln.</td>
+      <td class="diff-new">Die versicherte Person ist stuhlinkontinent; die Pflegekraft muss sie nach jedem Vorfall im Intimbereich waschen, die Windel und die Kleidung komplett wechseln.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">34</td>
+      <td>M6</td>
+      <td>kontaktpflege zu personen außerhalb des direkten umfelds</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>validated</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">34</td>
+      <td>M6</td>
+      <td>kontaktpflege zu personen außerhalb des direkten umfelds</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>validated</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">34</td>
+      <td>M6</td>
+      <td>kontaktpflege zu personen außerhalb des direkten umfelds</td>
+      <td>Punktwert</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>validated</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>4_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">34</td>
+      <td>M6</td>
+      <td>kontaktpflege zu personen außerhalb des direkten umfelds</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">3</td>
+      <td class="diff-new">2</td>
+      <td>validated</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">1</td>
+      <td>M1</td>
+      <td>positionswechsel im bett</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">3</td>
+      <td>M1</td>
+      <td>umsetzen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann vom Stuhl auf das Bett wechseln, wenn eine Hilfsperson sie massiv am Becken stabilisiert.</td>
+      <td class="diff-new">Die versicherte Person kann vom Stuhl auf das Bett wechseln, wenn eine Hilfsperson sie massiv am Becken stabilisiert, indem sie sie hält.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">5</td>
+      <td>M1</td>
+      <td>treppensteigen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann nur mit erheblicher Hilfe einer Person Treppen steigen, wobei die Hilfsperson fast das gesamte Gewicht tragen muss.</td>
+      <td class="diff-new">Die versicherte Person kann nur mit erheblicher Hilfe einer Person Treppen steigen, wobei die Hilfsperson sie sehr stützen muss. Zuhause nutzt sie deswegen alleine einen Treppenlift. </td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">8</td>
+      <td>M2</td>
+      <td>zeitliche orientierung</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">8</td>
+      <td>M2</td>
+      <td>zeitliche orientierung</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">8</td>
+      <td>M2</td>
+      <td>zeitliche orientierung</td>
+      <td>Punktwert</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">8</td>
+      <td>M2</td>
+      <td>zeitliche orientierung</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person kann die Katheterbeutelentleerung unter Anleitung selbst durchführen, vergisst aber ohne Anleitung den Verschluss wieder zu schließen.</td>
+      <td class="diff-new">Die versicherte Person kann die Katheterbeutelentleerung nur unter Anleitung selbst durchführen, vergisst aber ohne Anleitung den Verschluss wieder zu schließen.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Punktwert</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>5_complete-benchmark_gemini_3_26-05-15</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person hat ein Stoma. Sie kann den Beutel leeren, benötigt aber Hilfe beim korrekten Ausschneiden der Basisplatte auf die richtige Größe.</td>
+      <td class="diff-new">Die versicherte Person hat ein zweiteiliges Stoma. Sie kann den Beutel leeren, benötigt aber Hilfe beim korrekten Ausschneiden der Basisplatte auf die richtige Größe.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">2</td>
+      <td>M1</td>
+      <td>halten einer stabilen sitzposition</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">18</td>
+      <td>M4</td>
+      <td>körperpflege im bereich des kopfes</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">25</td>
+      <td>M4</td>
+      <td>trinken</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>7_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">13</td>
+      <td>M2</td>
+      <td>erkennen von risiken und gefahren</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">13</td>
+      <td>M2</td>
+      <td>erkennen von risiken und gefahren</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">13</td>
+      <td>M2</td>
+      <td>erkennen von risiken und gefahren</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">21</td>
+      <td>M4</td>
+      <td>ankleiden des oberkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">22</td>
+      <td>M4</td>
+      <td>ankleiden des unterkörpers</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">28</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer stuhlinkontinenz und umgang mit stoma</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">0</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">29</td>
+      <td>M6</td>
+      <td>gestaltung des tagesablaufs und anpassung an veränderungen</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">29</td>
+      <td>M6</td>
+      <td>gestaltung des tagesablaufs und anpassung an veränderungen</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">29</td>
+      <td>M6</td>
+      <td>gestaltung des tagesablaufs und anpassung an veränderungen</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">30</td>
+      <td>M6</td>
+      <td>ruhen und schlafen</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">30</td>
+      <td>M6</td>
+      <td>ruhen und schlafen</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">30</td>
+      <td>M6</td>
+      <td>ruhen und schlafen</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">1</td>
+      <td class="diff-new">2</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>8_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">30</td>
+      <td>M6</td>
+      <td>ruhen und schlafen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person schläft nachts durch, braucht aber Hilfe beim Aufstehen, wenn sie zur Toilette muss, da sie sonst stürzt.</td>
+      <td class="diff-new">Die versicherte Person schläft nachts durch, braucht aber Hilfe beim Aufstehen, wenn sie zur Toilette muss, da sie sonst stürzt. Dies erfolgt 2x in der Nacht.</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">24</td>
+      <td>M4</td>
+      <td>essen</td>
+      <td>Falltext (stem)</td>
+      <td class="diff-old">Die versicherte Person wird über eine PEG-Sonde ernährt. Sie spült die Sonde nach der Gabe der Nahrung selbständig mit Wasser durch.</td>
+      <td class="diff-new">Die versicherte Person wird über eine PEG-Sonde ernährt. Sie verabreicht sich die Nahrung alleine und spült die Sonde nach der Gabe der Nahrung selbständig mit Wasser durch.</td>
+      <td>rejected</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>validated</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>validated</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">26</td>
+      <td>M4</td>
+      <td>benutzen einer toilette oder eines toilettenstuhls</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>validated</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Antwortindex</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Punkteskala-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr><tr>
+      <td>Gemini</td>
+      <td><code>9_complete-benchmark_gemini_3_26-06-14</code></td>
+      <td class="num">27</td>
+      <td>M4</td>
+      <td>bewältigen der folgen einer harninkontinenz und umgang mit dauerkatheter und urinbeutel</td>
+      <td>Begründungs-ID</td>
+      <td class="diff-old">2</td>
+      <td class="diff-new">1</td>
+      <td>peer_review</td>
+    </tr></tbody>
+</table></div>
+  </details>
+</div>
+
+</div>
+</body>
+</html>
